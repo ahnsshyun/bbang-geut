@@ -2,8 +2,13 @@ import React, { useMemo, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 
-import Layout from "../components/Layout";
-import Title from "../components/Title";
+import COLORS from "../styles/colors";
+import FONTS, { font } from "../styles/fonts";
+import Layout, { Content, Spacer } from "../components/Layout";
+import LoginTheme from "../components/LoginTheme";
+import Button from "../components/Button";
+import { InfoBox } from "../components/Box";
+
 import Calendar from "../components/Calendar";
 
 // TODO(백엔드 연동 시 제거): 예시 케이스 기준 고정 수술일
@@ -11,13 +16,19 @@ import Calendar from "../components/Calendar";
 const SURGERY_DATE = new Date(2026, 7, 3); // 2026-08-03
 
 // TODO: 실제 "비행 규칙" 구간 기준(명세서 3.4 귀국 예정일 항목)이 확정되면 아래 경계값 교체
-// 지금은 디자인 예시(D+11 → 주의)에 맞춘 추정값입니다.
 function getFlightZone(dn) {
   if (dn === null) return null;
   if (dn <= 6) return { label: "금지", token: "danger" };
   if (dn <= 13) return { label: "주의", token: "warning" };
   return { label: "가능", token: "success" };
 }
+
+// TODO: colors.js에 danger/warning/success 색상이 없어 임시 매핑했습니다.
+const ZONE_COLORS = {
+  danger: COLORS.error,
+  warning: COLORS.yellow,
+  success: COLORS.text_green,
+};
 
 function diffDaysFromSurgery(date) {
   const ms = date.setHours(0, 0, 0, 0) - new Date(SURGERY_DATE).setHours(0, 0, 0, 0);
@@ -83,14 +94,14 @@ const OnboardingPersonal = () => {
   return (
     <Layout>
       <Content>
-        <StepBadge>STEP 3/3 · 개인 변수</StepBadge>
-        <Title>3가지만 확인할게요</Title>
-        <Desc>
-          병원 안내문에 '~인 경우'로 표기된 항목들이에요. 문서만으로는 알 수
-          없어 직접 여쭤봐요.
-        </Desc>
+        <LoginTheme
+          step="STEP 3/3 · 개인 변수"
+          title="3가지만 확인할게요"
+          desc="병원 문서만으로는 알 수 없어 직접 여쭤봐요."
+        />
+        <Spacer/>
 
-        <QuestionCard>
+        <InfoBox style={{ padding: "16px", marginBottom: "20px" }}>
           <QuestionTitle>코 안에 흰 솜(패킹)이 들어 있나요?</QuestionTitle>
           <QuestionHint>있다면 제거 일정이 루틴에 포함됩니다.</QuestionHint>
           <ToggleRow>
@@ -109,9 +120,9 @@ const OnboardingPersonal = () => {
               아니오
             </ToggleButton>
           </ToggleRow>
-        </QuestionCard>
+        </InfoBox>
 
-        <QuestionCard>
+        <InfoBox style={{ padding: "16px", marginBottom: "20px" }}>
           <QuestionTitle>콧볼 축소를 함께 하셨나요?</QuestionTitle>
           <QuestionHint>있다면 제거 일정이 루틴에 포함됩니다.</QuestionHint>
           <ToggleRow>
@@ -130,13 +141,12 @@ const OnboardingPersonal = () => {
               아니오
             </ToggleButton>
           </ToggleRow>
-        </QuestionCard>
+        </InfoBox>
 
-        <QuestionCard style={{ position: "relative" }}>
+        <InfoBox style={{ padding: "16px", position: "relative",  overflow: "visible" }}>
           <QuestionTitle>귀국 예정일을 입력해주세요</QuestionTitle>
           <QuestionHint>
-            항공권에 적힌 날짜 그대로 넣어주세요. 이 날짜로 비행 안전성, 귀국
-            후 루틴 전환 시점, 남은 일수 (D-N)를 계산합니다.
+            항공권에 적힌 날짜 그대로 넣어주세요. 이 날짜를 회복 루틴에 반영합니다.
           </QuestionHint>
 
           <DateRow>
@@ -158,30 +168,27 @@ const OnboardingPersonal = () => {
                 selectedDate={returnDate}
                 onSelect={handleSelectDate}
                 minDate={SURGERY_DATE}
+                markedDate={SURGERY_DATE}
+                markedLabel="수술일"
               />
             </CalendarPopover>
           )}
 
           {returnDate && flightZone && (
             <DateHint>
-              수술일 {formatDot(SURGERY_DATE)} 기준{" "}
-              <b>{formatDot(new Date(returnDate))}</b> · D+{returnDN} 귀국으로
-              저장됩니다. 귀국일이 비행{" "}
+              <b>수술일 {formatDot(SURGERY_DATE)} </b>기준{" "}
+              귀국일이 비행{" "}
               <ZoneLabel $token={flightZone.token}>{flightZone.label}</ZoneLabel>{" "}
               구간에 들어갑니다.
             </DateHint>
           )}
-        </QuestionCard>
+        </InfoBox>
 
         <Spacer />
 
-        <CreateButton
-          type="button"
-          disabled={!isComplete}
-          onClick={handleCreateRoutine}
-        >
+        <Button type="button" disabled={!isComplete} onClick={handleCreateRoutine}>
           케어 루틴 만들기
-        </CreateButton>
+        </Button>
       </Content>
     </Layout>
   );
@@ -189,45 +196,18 @@ const OnboardingPersonal = () => {
 
 export default OnboardingPersonal;
 
-const Content = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  text-align: left;
-`;
-
-const StepBadge = styled.p`
-  font-size: 13px;
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.primary};
-  margin: 0 0 8px;
-`;
-
-const Desc = styled.p`
-  font-size: 12px;
-  line-height: 1.6;
-  color: ${({ theme }) => theme.colors.textLight};
-  margin: 10px 0 24px;
-`;
-
-const QuestionCard = styled.div`
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.card};
-  padding: 20px;
-  margin-bottom: 20px;
-`;
+/* ---------- styles ---------- */
 
 const QuestionTitle = styled.p`
-  font-size: 15px;
-  font-weight: 800;
+  ${font("boldbody")}
+  font-size: 14px;
+  color: #111111; 
   margin: 0 0 6px;
 `;
 
 const QuestionHint = styled.p`
-  font-size: 11px;
-  color: ${({ theme }) => theme.colors.textLight};
+  ${font("regbody")}
+  color: ${COLORS.text_gray};
   margin: 0 0 16px;
 `;
 
@@ -238,17 +218,14 @@ const ToggleRow = styled.div`
 
 const ToggleButton = styled.button`
   flex: 1;
-  padding: 14px 0;
-  font-size: 14px;
-  font-weight: 700;
-  border-radius: ${({ theme }) => theme.radius.button};
-  border: 1.5px solid
-    ${({ theme, $active }) => ($active ? theme.colors.primary : theme.colors.border)};
-  background: ${({ theme, $active }) =>
-    $active ? theme.colors.primaryLight : "#ffffff"};
-  color: ${({ theme, $active }) =>
-    $active ? theme.colors.primaryHover : theme.colors.text};
+  padding: 8px 0;
+  ${font("semibody")}
+  border-radius: 11px;
+  border: 1.5px solid ${({ $active }) => ($active ? COLORS.main : "#e5e5ea")};
+  background: ${({ $active }) => ($active ? COLORS.background_lightpurple : "#ffffff")};
+  color: ${({ $active }) => ($active ? COLORS.main : COLORS.text_gray)};
   cursor: pointer;
+
 `;
 
 const DateRow = styled.div`
@@ -262,9 +239,9 @@ const DateField = styled.button`
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  font-size: 14px;
-  border-radius: ${({ theme }) => theme.radius.button};
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  ${font("semibody")}
+  border-radius: 11px;
+  border: 1px solid ${COLORS.border};
   background: #ffffff;
   cursor: pointer;
   text-align: left;
@@ -275,11 +252,10 @@ const DnBadge = styled.div`
   align-items: center;
   justify-content: center;
   padding: 0 16px;
-  font-size: 14px;
-  font-weight: 800;
-  color: ${({ theme }) => theme.colors.primary};
-  background: ${({ theme }) => theme.colors.primaryLight};
-  border-radius: ${({ theme }) => theme.radius.button};
+  ${font("boldbody")}
+  color: ${COLORS.main};
+  background: ${COLORS.background_lightpurple};
+  border-radius: 11px;
   white-space: nowrap;
 `;
 
@@ -291,41 +267,17 @@ const CalendarPopover = styled.div`
   z-index: 20;
   margin-top: 8px;
   background: #ffffff;
-  border-radius: ${({ theme }) => theme.radius.card};
+  border-radius: 11px;
   box-shadow: 0 12px 32px rgba(80, 130, 180, 0.2);
 `;
 
 const DateHint = styled.p`
-  font-size: 11px;
-  line-height: 1.6;
-  color: ${({ theme }) => theme.colors.textLight};
+  ${font("regbody")}
+  color: ${COLORS.text_gray};
   margin: 14px 0 0;
 `;
 
 const ZoneLabel = styled.span`
-  font-weight: 700;
-  color: ${({ theme, $token }) => theme.colors[$token]};
-`;
-
-const Spacer = styled.div`
-  flex: 1;
-  min-height: 12px;
-`;
-
-const CreateButton = styled.button`
-  width: 100%;
-  padding: 16px 0;
-  font-size: 14px;
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.textLight};
-  background: ${({ theme }) => theme.colors.surfaceMuted};
-  border: none;
-  border-radius: ${({ theme }) => theme.radius.button};
-  cursor: not-allowed;
-
-  &:not(:disabled) {
-    color: #ffffff;
-    background: ${({ theme }) => theme.colors.primary};
-    cursor: pointer;
-  }
+  ${font("regbody")}
+  color: ${({ $token }) => ZONE_COLORS[$token]};
 `;

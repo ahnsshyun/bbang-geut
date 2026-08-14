@@ -1,5 +1,7 @@
 import { useState } from "react";
 import styled from "styled-components";
+import COLORS from "../styles/colors";
+import FONTS, { font } from "../styles/fonts";
 import { getMonthMatrix, isSameDay } from "../utils/dateUtils";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -9,8 +11,9 @@ const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
  * - selectedDate: 선택된 Date | null
  * - onSelect: (date: Date) => void
  * - minDate: 이 날짜보다 이전은 선택 불가 (보통 시술일)
+ * - markedDate: 표시(점)를 찍을 날짜 (보통 수술일)
  */
-const Calendar = ({ selectedDate, onSelect, minDate }) => {
+const Calendar = ({ selectedDate, onSelect, minDate, markedDate }) => {
   const [viewDate, setViewDate] = useState(selectedDate || new Date());
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
@@ -46,14 +49,18 @@ const Calendar = ({ selectedDate, onSelect, minDate }) => {
             if (!date) return <DayCell key={j} $empty />;
             const disabled = isDisabled(date);
             const selected = isSameDay(date, selectedDate);
+            const marked = isSameDay(date, markedDate);
+            const isToday = isSameDay(date, new Date());
             return (
               <DayCell
                 key={j}
                 $selected={selected}
                 $disabled={disabled}
+                $marked={marked}
                 onClick={() => !disabled && onSelect(date)}
               >
                 {date.getDate()}
+                {isToday && <TodayDot />}
               </DayCell>
             );
           })}
@@ -65,11 +72,15 @@ const Calendar = ({ selectedDate, onSelect, minDate }) => {
 
 export default Calendar;
 
+/* ---------- styles ---------- */
+/* TODO: colors.js에 border, textMuted, textSub 값이 없어 임시 매핑/하드코딩했습니다. */
+
 const Wrapper = styled.div`
   width: 100%;
-  background: ${({ theme }) => theme.colors.white};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.button};
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid ${COLORS.border};
+  border-radius: 11px;
   padding: 14px;
 `;
 
@@ -81,20 +92,23 @@ const Header = styled.div`
 `;
 
 const MonthLabel = styled.div`
-  font-size: 13px;
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.text};
+  ${font("boldbody")}
+  color: #111111; 
 `;
 
 const NavButton = styled.button`
   width: 28px;
   height: 28px;
   border-radius: 50%;
+  border: none;
+  background: transparent;
   font-size: 16px;
-  color: ${({ theme }) => theme.colors.textLight};
+  color: ${COLORS.text_gray};
+  cursor: pointer;
+
   &:hover {
-    background: ${({ theme }) => theme.colors.primaryLight};
-    color: ${({ theme }) => theme.colors.primary};
+    background: ${COLORS.background_lightpurple};
+    color: ${COLORS.main};
   }
 `;
 
@@ -105,25 +119,38 @@ const WeekRow = styled.div`
 
 const WeekdayCell = styled.div`
   text-align: center;
-  font-size: 11px;
-  color: ${({ theme }) => theme.colors.textLight};
+  ${font("regbody")}
+  color: ${COLORS.text_gray};
   padding: 6px 0;
 `;
 
 const DayCell = styled.div`
+  position: relative;
   text-align: center;
-  font-size: 12px;
+  ${font("regbody")}
   padding: 8px 0;
   border-radius: 10px;
   cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
-  color: ${({ theme, $disabled, $selected }) =>
-    $disabled ? theme.colors.textMuted : $selected ? theme.colors.white : theme.colors.textSub};
-  background: ${({ theme, $selected }) => ($selected ? theme.colors.primary : "transparent")};
+  color: ${({ $disabled, $selected }) =>
+    $disabled ? COLORS.greey : $selected ? "#ffffff" : COLORS.text_gray};
+  background: ${({ $selected, $marked }) =>
+    $selected ? COLORS.main : $marked ? COLORS.background_lightpurple : "transparent"};
   font-weight: ${({ $selected }) => ($selected ? 700 : 400)};
   visibility: ${({ $empty }) => ($empty ? "hidden" : "visible")};
 
   &:hover {
-    background: ${({ theme, $disabled, $selected }) =>
-      $disabled ? "transparent" : $selected ? theme.colors.primary : theme.colors.primaryLight};
+    background: ${({ $disabled, $selected }) =>
+      $disabled ? "transparent" : $selected ? COLORS.main : COLORS.background_lightpurple};
   }
+`;
+
+const TodayDot = styled.span`
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: ${COLORS.main};
 `;
