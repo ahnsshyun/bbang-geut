@@ -152,8 +152,8 @@ const TabLabel = styled.span`
 
 const DEFAULT_TABS = [
   { key: "home", Icon: HomeIcon, label: "홈", path: "/home" },
-  { key: "checkin", Icon: CameraIcon, label: "체크인", path: "/checkin" },
-  { key: "record", Icon: RecordIcon, label: "기록", path: "/record" },
+  { key: "checkin", Icon: CameraIcon, label: "체크인", path: "/checkin/photo" },
+  { key: "record", Icon: RecordIcon, label: "기록", path: "/history" },
   { key: "hospital", Icon: HospitalIcon, label: "병원 연결", path: "/hospital" },
 ];
 
@@ -175,7 +175,7 @@ const HomeTheme = ({ bannerTitle = "나란히", onBellClick, children }) => {
           <BannerTitle>{bannerTitle}</BannerTitle>
           <BannerText>회복의 모든 날을 나란히</BannerText>
         </BannerTitleGroup>
-        <AlertButton onClick={onBellClick} aria-label="알림">
+        <AlertButton onClick={() => navigate("/notification")} aria-label="알림">
           🔔
         </AlertButton>
       </TopBanner>

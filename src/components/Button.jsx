@@ -27,7 +27,7 @@ const MainButtonEl = styled.button`
   border: none;
   border-radius: 11px;
   cursor: ${(props) => (props.disabled ? 'default' : 'pointer')};
-  margin: 10px 10px 0px 0px;
+  margin: 10px 0px 10px 0px;
 `;
 
 /* ============================================================
@@ -75,4 +75,27 @@ const ShutterButtonEl = styled.button`
   background: ${COLORS.main};
   cursor: pointer;
   animation: ${glow} 1.8s ease-in-out infinite;
+`;
+
+/* ============================================================
+   CloseButton — 원형 ✕ 닫기 버튼 
+============================================================ */
+export const CloseButton = styled.button`
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 0.2px solid ${COLORS.border};
+  background: #f2f2f5;
+  color: ${COLORS.text_gray};
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  &:hover {
+    background: ${COLORS.background_lightpurple};
+    color: ${COLORS.main};
+  }
 `;

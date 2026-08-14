@@ -11,10 +11,21 @@ const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
  * - selectedDate: 선택된 Date | null
  * - onSelect: (date: Date) => void
  * - minDate: 이 날짜보다 이전은 선택 불가 (보통 시술일)
- * - markedDate: 표시(점)를 찍을 날짜 (보통 수술일)
+ * - markedDate: 점(dot)을 찍을 날짜 (보통 수술일)
+ * - hospitalVisitDates: 병원 내원일 배열 (연보라 배경 표시)
+ * - returnDate: 귀국 예정일 (비행기 이모지 표시)
  */
-const Calendar = ({ selectedDate, onSelect, minDate, markedDate }) => {
-  const [viewDate, setViewDate] = useState(selectedDate || new Date());
+const Calendar = ({
+  selectedDate,
+  onSelect,
+  minDate,
+  markedDate,
+  hospitalVisitDates = [],
+  returnDate,
+  completeDate,
+  
+}) => {
+  const [viewDate, setViewDate] = useState(selectedDate || markedDate || new Date());
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
   const weeks = getMonthMatrix(year, month);
@@ -51,16 +62,22 @@ const Calendar = ({ selectedDate, onSelect, minDate, markedDate }) => {
             const selected = isSameDay(date, selectedDate);
             const marked = isSameDay(date, markedDate);
             const isToday = isSameDay(date, new Date());
+            const isHospitalVisit = hospitalVisitDates.some((d) => isSameDay(d, date));
+            const isReturnDay = isSameDay(date, returnDate);
+            const isCompleteDay = isSameDay(date, completeDate);
+
             return (
               <DayCell
                 key={j}
                 $selected={selected}
                 $disabled={disabled}
-                $marked={marked}
-                onClick={() => !disabled && onSelect(date)}
+                $hospitalVisit={isHospitalVisit}
+                onClick={() => !disabled && onSelect && onSelect(date)}
               >
                 {date.getDate()}
-                {isToday && <TodayDot />}
+                {marked && <SurgeryDot />}
+                {isReturnDay && <PlaneMark>✈️</PlaneMark>}
+                {isCompleteDay && <CompleteMark>🏆</CompleteMark>}
               </DayCell>
             );
           })}
@@ -73,7 +90,6 @@ const Calendar = ({ selectedDate, onSelect, minDate, markedDate }) => {
 export default Calendar;
 
 /* ---------- styles ---------- */
-/* TODO: colors.js에 border, textMuted, textSub 값이 없어 임시 매핑/하드코딩했습니다. */
 
 const Wrapper = styled.div`
   width: 100%;
@@ -93,7 +109,7 @@ const Header = styled.div`
 
 const MonthLabel = styled.div`
   ${font("boldbody")}
-  color: #111111; 
+  color: #111111;
 `;
 
 const NavButton = styled.button`
@@ -128,13 +144,13 @@ const DayCell = styled.div`
   position: relative;
   text-align: center;
   ${font("regbody")}
-  padding: 8px 0;
+  padding: 15px 0;
   border-radius: 10px;
   cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
   color: ${({ $disabled, $selected }) =>
     $disabled ? COLORS.greey : $selected ? "#ffffff" : COLORS.text_gray};
-  background: ${({ $selected, $marked }) =>
-    $selected ? COLORS.main : $marked ? COLORS.background_lightpurple : "transparent"};
+  background: ${({ $selected, $hospitalVisit }) =>
+    $selected ? COLORS.main : $hospitalVisit ? COLORS.background_lightpurple : "transparent"};
   font-weight: ${({ $selected }) => ($selected ? 700 : 400)};
   visibility: ${({ $empty }) => ($empty ? "hidden" : "visible")};
 
@@ -144,7 +160,7 @@ const DayCell = styled.div`
   }
 `;
 
-const TodayDot = styled.span`
+const SurgeryDot = styled.span`
   position: absolute;
   bottom: 2px;
   left: 50%;
@@ -153,4 +169,22 @@ const TodayDot = styled.span`
   height: 4px;
   border-radius: 50%;
   background: ${COLORS.main};
+`;
+
+const PlaneMark = styled.span`
+  position: absolute;
+  bottom: 1px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  line-height: 1;
+`;
+
+const CompleteMark = styled.span`
+  position: absolute;
+  bottom: 1px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  line-height: 1;
 `;

@@ -338,13 +338,17 @@ export function RoutineCard({
   totalChecks,
   checkedCount,
   onToggleCheck,
-  onViewOriginal,
+  onOpenDetail,          // ← 이 줄 있는지 확인
   variant = "default",
 }) {
   const allChecked = checkedCount >= totalChecks;
 
   return (
-    <RoutineCardEl $variant={variant} $allChecked={allChecked}>
+    <RoutineCardEl
+      $variant={variant}
+      $allChecked={allChecked}
+      onClick={onOpenDetail}   
+    >
       <RoutineTop>
         <RoutineTitleGroup>
           <RoutineIconWrap $variant={variant}>{icon}</RoutineIconWrap>
@@ -354,23 +358,26 @@ export function RoutineCard({
           </RoutineTextGroup>
         </RoutineTitleGroup>
 
-          <CheckGroup>
-            {Array.from({ length: totalChecks }).map((_, i) => {
-              const checked = i < checkedCount;
-              return (
-                <CheckCircle
-                  key={i}
-                  type="button"
-                  $checked={checked}
-                  $variant={variant}
-                  onClick={() => onToggleCheck(i)}
-                  aria-label={`${i + 1}회차 ${checked ? "체크 해제" : "체크"}`}
-                >
-                  {checked ? "✓" : i + 1}
-                </CheckCircle>
-              );
-            })}
-          </CheckGroup>
+        <CheckGroup>
+          {Array.from({ length: totalChecks }).map((_, i) => {
+            const checked = i < checkedCount;
+            return (
+              <CheckCircle
+                key={i}
+                type="button"
+                $checked={checked}
+                $variant={variant}
+                onClick={(e) => {
+                  e.stopPropagation();     
+                  onToggleCheck(i);
+                }}
+                aria-label={`${i + 1}회차 ${checked ? "체크 해제" : "체크"}`}
+              >
+                {checked ? "✓" : i + 1}
+              </CheckCircle>
+            );
+          })}
+        </CheckGroup>
       </RoutineTop>
 
       <RoutineDesc>{description}</RoutineDesc>
@@ -561,5 +568,95 @@ export function StatusGroupList({ items = [] }) {
         );
       })}
     </>
+  );
+}
+
+/* ============================================================
+   6. TimelineSection — "앞으로의 변화" 리스트
+============================================================ */
+const TIMELINE_STATUS_STYLE = {
+  visit: { bg: COLORS.background_lightpurple, color: COLORS.main, label: "내원" },
+  complete: { bg: COLORS.main, color: "#ffffff", label: "완주" },
+  ok: { bg: "#E7F7EE", color: COLORS.text_green, label: "가능" },
+  caution: { bg: "#FFF3CD", color: "#8A6300", label: "주의" },
+  danger: { bg: "#FDEAEA", color: COLORS.error, label: "금지" },
+};
+
+const TimelineWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 20px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0px 10px 10px 1px rgba(0, 0, 0, 0.05);
+`;
+
+const TimelineRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+
+  & + & {
+    border-top: 1px solid ${COLORS.border};
+  }
+`;
+
+const TimelineDate = styled.span`
+  flex-shrink: 0;
+  width: 62px;
+  ${font("boldbody")}
+  font-size: 13px;
+  color: ${COLORS.text_gray};
+`;
+
+const TimelineDDay = styled.span`
+  flex-shrink: 0;
+  width: 34px;
+  ${font("boldbody")}
+  font-size: 13px;
+  color: ${COLORS.greey};
+`;
+
+const TimelineLabel = styled.span`
+  flex: 1;
+  min-width: 0;
+  ${font("boldbody")}
+  font-size: 13px;
+  color: #111111;
+`;
+
+const TimelineBadge = styled.span`
+  flex-shrink: 0;
+  ${font("boldbody")}
+  font-size: 12px;
+  color: ${({ $status }) => TIMELINE_STATUS_STYLE[$status].color};
+  background: ${({ $status }) => TIMELINE_STATUS_STYLE[$status].bg};
+  padding: 5px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+`;
+
+/**
+ * props:
+ * - items: [{ key, date, dDay, label, status }]
+ *   status: "visit" | "complete" | "ok" | "caution" | "danger"
+ */
+export function TimelineSection({ items = [] }) {
+  return (
+    <TimelineWrapper>
+      {items.map((item) => (
+        <TimelineRow key={item.key}>
+          <TimelineDate>{item.date}</TimelineDate>
+          <TimelineDDay>{item.dDay}</TimelineDDay>
+          <TimelineLabel>{item.label}</TimelineLabel>
+          <TimelineBadge $status={item.status}>
+            {TIMELINE_STATUS_STYLE[item.status].label}
+          </TimelineBadge>
+        </TimelineRow>
+      ))}
+    </TimelineWrapper>
   );
 }

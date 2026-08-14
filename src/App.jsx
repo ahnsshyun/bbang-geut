@@ -16,6 +16,13 @@ import ScrollToTop from "./components/ScrollToTop";
 
 import Home from "./home-pages/Home";
 import Schedule from "./home-pages/Schedule";
+import Notification from "./home-pages/Notification";
+
+import CheckinPhoto from "./checkin-pages/CheckinPhoto";
+import CheckinStatus from "./checkin-pages/CheckinStatus";
+import CheckinComplete from "./checkin-pages/CheckinComplete";
+
+import History from "./history-pages/History";
 
 function App() {
   return (
@@ -38,11 +45,17 @@ function App() {
           <Route path="/onboarding/personal" element={<OnboardingPersonal />} />
           <Route path="/onboarding/complete" element={<OnboardingComplete />} />
 
+          {/* 메인 탭 */}
           <Route path="/home" element={<Home />} />
           <Route path="/schedule" element={<Schedule />} />
-
-          {/* 메인 탭 (하단 네비 등 공통 레이아웃 적용) */}
+          <Route path="/notification" element={<Notification />} />
           
+          <Route path="/checkin/photo" element={<CheckinPhoto />} />
+          <Route path="/checkin/status" element={<CheckinStatus />} />
+          <Route path="/checkin/complete" element={<CheckinComplete />} />
+
+          <Route path="/history" element={<History />} />
+
         </Routes>
       </BrowserRouter>
   );
