@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 
+import COLORS from "../styles/colors";
+import FONTS, { font } from "../styles/fonts";
+
 const LANGUAGES = [
   { code: "ko", name: "한국어" },
   { code: "ja", name: "日本語" },
@@ -56,12 +59,14 @@ const Splash = () => {
           ))}
         </LangRow>
 
-        <Warning>
-          ⚠️언어는 지금 한 번만 선택합니다. 진료 기록 · 제출 문서의 언어가
-          함께 결정되므로 이후 앱 내에서 변경이 불가합니다.
-        </Warning>
+        <Warning>⚠️언어는 최초 한 번만 선택 가능합니다.</Warning>
 
-        <StartButton type="button" disabled={!lang} onClick={handleStart}>
+        <StartButton
+          type="button"
+          disabled={!lang}
+          $active={!!lang}
+          onClick={handleStart}
+        >
           시작하기
         </StartButton>
       </BottomSection>
@@ -77,9 +82,12 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   border-radius: 28px;
-  border: none;
-  background: ${({ theme }) =>
-    `linear-gradient(160deg, ${theme.colors.gradientStart} 0%, ${theme.colors.gradientEnd} 100%)`};
+  background: linear-gradient(
+    160deg,
+    ${COLORS.main} 0%,
+    #935fe8 69%,
+    #B262E1 100%
+  );
   box-shadow: 0 12px 32px rgba(80, 130, 180, 0.14);
   padding: 44px 28px 32px;
   margin: 0 auto;
@@ -92,29 +100,33 @@ const TopSection = styled.div`
 `;
 
 const Label = styled.p`
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  color: rgba(255, 255, 255, 0.85);
-  margin: 0 0 12px;
+  ${font("regbody")}
+  font-family: ${FONTS.fallback};
+  color: #ffffff;
+  margin: 0 0 25px;
 `;
 
 const Logo = styled.h1`
-  font-size: 44px;
+  font-family: ${FONTS.fallback};
+  font-size: 55px;
   font-weight: 800;
-  margin: 0 0 20px;
+  margin: 0 0 30px;
+  line-height: 36px;
+  letter-spacing: -4.4px;
 `;
 
 const Tagline = styled.p`
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.35;
-  margin: 0 0 16px;
+  font-family: ${FONTS.fallback};
+  font-weight: ${FONTS.roles.heading.weight};
+  font-size: ${FONTS.roles.heading.size};
+  line-height: ${FONTS.roles.heading.lineHeight};
+  margin: 0 0 28px;
 `;
 
 const Desc = styled.p`
-  font-size: 14px;
-  line-height: 1.7;
-  color: rgba(255, 255, 255, 0.9);
+  ${font("regbody")}
+  line-height: 20px;
+  color: #ffffff;
   margin: 0;
 `;
 
@@ -133,39 +145,37 @@ const LangRow = styled.div`
 const LangButton = styled.button`
   flex: 1;
   padding: 14px 0;
-  font-size: 14px;
-  font-weight: 700;
-  color: #ffffff;
+  font-family: ${FONTS.fallback};
+  font-weight: ${FONTS.roles.semibody.weight};
+  font-size: ${FONTS.roles.semibody.size};
+  color: ${({ $active }) => ($active ? COLORS.main : "#ffffff")};
   background: ${({ $active }) =>
-    $active ? "rgba(255, 255, 255, 0.34)" : "rgba(255, 255, 255, 0.16)"};
-  border: 1px solid
-    ${({ $active }) => ($active ? "rgba(255, 255, 255, 0.9)" : "transparent")};
-  border-radius: 14px;
+    $active ? COLORS.background_lightpurple : "rgba(255, 255, 255, 0.15)"};
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 11px;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
 `;
 
 const Warning = styled.p`
-  font-size: 11px;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.85);
+  font-family: ${FONTS.fallback};
+  font-weight: ${FONTS.roles.regbody.weight};
+  font-size: ${FONTS.roles.regbody.size};
+  color: #ffffff;
   margin: 0;
 `;
 
 const StartButton = styled.button`
   width: 100%;
   padding: 16px 0;
-  font-size: 15px;
-  font-weight: 700;
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.22);
+  font-family: ${FONTS.fallback};
+  font-weight: ${FONTS.roles.body.weight};
+  font-size: ${FONTS.roles.body.size};
+  color: ${({ $active }) => ($active ? COLORS.main : "#ffffff")};
+  background: ${({ $active }) =>
+    $active ? COLORS.background_lightpurple : "rgba(255, 255, 255, 0.15)"};
   border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 16px;
+  border-radius: 11px;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.15s ease, background 0.15s ease;
 
-  &:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-  }
 `;
