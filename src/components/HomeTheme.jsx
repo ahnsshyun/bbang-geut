@@ -153,7 +153,7 @@ const TabLabel = styled.span`
 const DEFAULT_TABS = [
   { key: "home", Icon: HomeIcon, label: "홈", path: "/home" },
   { key: "checkin", Icon: CameraIcon, label: "체크인", path: "/checkin/photo" },
-  { key: "record", Icon: RecordIcon, label: "기록", path: "/history" },
+  { key: "history", Icon: RecordIcon, label: "기록", path: "/history/submission", matchPaths: ["/history", "/home-country"] },
   { key: "hospital", Icon: HospitalIcon, label: "병원 연결", path: "/hospital" },
 ];
 
@@ -162,11 +162,14 @@ const HomeTheme = ({ bannerTitle = "나란히", onBellClick, children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const tabs = DEFAULT_TABS.map((tab) => ({
-    ...tab,
-    active: location.pathname === tab.path,
-    onClick: () => navigate(tab.path),
-  }));
+const tabs = DEFAULT_TABS.map((tab) => ({
+  ...tab,
+  active:
+    tab.key === "history"
+      ? location.pathname.startsWith("/history") || location.pathname === "/home-country"
+      : location.pathname === tab.path,
+  onClick: () => navigate(tab.path),
+}));
 
   return (
     <Wrapper>

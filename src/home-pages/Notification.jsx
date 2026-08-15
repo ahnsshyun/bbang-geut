@@ -36,7 +36,7 @@ const Notification = () => {
     <Wrapper>
       <Header>
         <Title>알림</Title>
-        <CloseButton type="button" onClick={() => navigate("/home")} aria-label="닫기">
+        <CloseButton type="button" onClick={() => navigate(-1)} aria-label="닫기">
           ✕
         </CloseButton>
       </Header>

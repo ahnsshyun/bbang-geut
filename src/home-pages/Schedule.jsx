@@ -10,6 +10,7 @@ import { RoutineSection, TimelineSection } from "../components/HomeBox";
 import { CloseButton } from "../components/Button";
 
 // TODO(백엔드 연동 시 제거): 예시 고정값
+// JavaScript의 Date 생성자에서 월(month)이 0부터 시작!
 const SURGERY_DATE = new Date(2026, 7, 5); // 2026-08-05
 const HOSPITAL_VISIT_DATES = [new Date(2026, 7, 5), new Date(2026, 7, 8), new Date(2026, 7, 10)];
 const RETURN_DATE = new Date(2026, 7, 20); // 2026-08-20 (D+17 예시)
@@ -121,10 +122,11 @@ const LegendItem = styled.div`
 `;
 
 const LegendDot = styled.span`
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: ${COLORS.main};
+  border: 2px solid ${COLORS.sub};
 `;
 
 const SelectedInfo = styled.div`

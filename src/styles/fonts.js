@@ -48,7 +48,7 @@ export const FONTS = {
     boldbody: {
       weight: 700,
       size: "12px",     
-      lineHeight: "normal",
+      lineHeight: "20px",
       letterSpacing: "-0.5px"
       
     },

@@ -62,20 +62,29 @@ export const PromptDesc = styled.p`
 /* ============================================================
    3. ToastBox — 검정 배경 토스트 알림
 ============================================================ */
-const DarkBox = styled.div`
-  width: 100%;
+export const ToastBox = styled.div`
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
   box-sizing: border-box;
-  background: #000000;
+  padding: 14px 20px;
+  border-radius: 30px;
+  background: rgba(0, 0, 0, 0.85);
   color: #ffffff;
-  border-radius: 11px;
-  padding: 14px 16px;
-  ${font("regbody")}
-  
-`;
+  ${font("boldbody")}
+  font-size: 13px;
+  white-space: nowrap;
+  animation: toastFadeInOut 2.5s ease forwards;
 
-export function ToastBox({ children }) {
-  return <DarkBox>{children}</DarkBox>;
-}
+  @keyframes toastFadeInOut {
+    0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  }
+`;
 
 /* ============================================================
    4. ErrorBox — 폼 에러 메시지 박스 (가운데 정렬)
@@ -261,6 +270,7 @@ export const InfoBox = styled.div`
   border: 1px solid ${COLORS.border};
   border-radius: 11px;
   overflow: hidden;
+  background: #ffffff;
 `;
 
 export const InfoRow = styled.div`
@@ -273,4 +283,15 @@ export const InfoRow = styled.div`
   & + & {
     border-top: 1px solid ${COLORS.border};
   }
+`;
+
+/* ============================================================
+   7. ShadowBox 
+============================================================ */
+export const ShadowBox = styled.div`
+  border-radius: 11px;
+  overflow: hidden;
+  background: #ffffff;
+  padding: 20px;
+  boxShadow: 0px 4px 25px 0px rgba(0, 0, 0, 0.1);
 `;

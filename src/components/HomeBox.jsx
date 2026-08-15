@@ -338,7 +338,7 @@ export function RoutineCard({
   totalChecks,
   checkedCount,
   onToggleCheck,
-  onOpenDetail,          // ← 이 줄 있는지 확인
+  onOpenDetail,          
   variant = "default",
 }) {
   const allChecked = checkedCount >= totalChecks;

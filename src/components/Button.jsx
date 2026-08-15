@@ -21,6 +21,7 @@ const MainButtonEl = styled.button`
   height: 50px;
 
   ${font("boldbody")}
+  font-size: 14px;
   color: #ffffff;
 
   background: ${(props) => (props.disabled ? '#D9D9D9' : COLORS.main)};
