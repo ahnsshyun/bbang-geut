@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# API 주소 및 토큰 유출 방지
+.env
+.env.production
+.env.local
