@@ -1,36 +1,53 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import { CloseButton } from "../components/Button";
 
-// TODO(백엔드 연동 시 제거): 예시 고정 데이터
-const HOSPITAL_REPLIES = [
-  {
-    key: "reply1",
-    title: "안서현 원장님이 답변했어요",
-    content:
-      "초기 반흔 조직이 자리잡는 과정에서 흔히 느끼는 감각입니다. D+5 부목 제거 때 직접 보겠습니다.",
-    meta: "어제 18:24 · 자동 번역됨",
-  },
-];
+import { getNotifications } from "../api/notifications";
 
-const TODAY_ROUTINE_NOTIS = [
-  {
-    key: "incision",
-    title: "절개부 소독",
-    remaining: "2회",
-  },
-  {
-    key: "coldpack",
-    title: "냉찜질",
-    remaining: "4회",
-  },
-];
+// 루틴 알림 title이 "짧은 보행 · 3회 남았어요" 형태로 미리 조합돼서 오기 때문에,
+// 기존 디자인처럼 "3회" 부분만 초록색으로 강조하려고 다시 분리합니다.
+// 패턴이 안 맞으면(형식이 바뀌면) 그냥 title 전체를 평범하게 보여줍니다.
+const ROUTINE_TITLE_PATTERN = /^(.+?)\s*·\s*(\d+회)\s*남았어요$/;
+
+function formatDateTime(isoDatetime) {
+  const d = new Date(isoDatetime);
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${m}.${day} ${hh}:${mm}`;
+}
 
 const Notification = () => {
   const navigate = useNavigate();
+  const [items, setItems] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getNotifications()
+      .then((data) => {
+        if (!cancelled) setItems(data.items);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const clinicReplies = (items ?? []).filter((i) => i.type === "clinic_reply");
+  const routineNotis = (items ?? []).filter((i) => i.type === "routine");
 
   return (
     <Wrapper>
@@ -41,35 +58,61 @@ const Notification = () => {
         </CloseButton>
       </Header>
 
-      <Section>
-        <SectionTitle>병원 답변</SectionTitle>
-        <List>
-          {HOSPITAL_REPLIES.map((item) => (
-            <NotiCard key={item.key}>
-              <NotiTitle>{item.title}</NotiTitle>
-              <NotiQuote>"{item.content}"</NotiQuote>
-              <NotiMeta>{item.meta}</NotiMeta>
-            </NotiCard>
-          ))}
-        </List>
-      </Section>
+      {loading && <NotiMeta>불러오는 중이에요...</NotiMeta>}
+      {error && <NotiMeta>알림을 불러오지 못했어요.</NotiMeta>}
 
-      <Section>
-        <SectionTitle>오늘 루틴</SectionTitle>
-        <List>
-          {TODAY_ROUTINE_NOTIS.map((item) => (
-            <NotiCard key={item.key}>
-              <NotiTop>
-                <NotiDot />
-                <NotiTitle>
-                  {item.title} · <RemainingCount>{item.remaining}</RemainingCount>{" "}
-                  <RemainingLabel>남았어요</RemainingLabel>
-                </NotiTitle>
-              </NotiTop>
-            </NotiCard>
-          ))}
-        </List>
-      </Section>
+      {!loading && !error && (
+        <>
+          {clinicReplies.length > 0 && (
+            <Section>
+              <SectionTitle>병원 답변</SectionTitle>
+              <List>
+                {clinicReplies.map((item, i) => (
+                  <NotiCard key={`reply-${i}`}>
+                    <NotiTop>
+                      {item.unread && <NotiDot />}
+                      <NotiTitle>{item.title}</NotiTitle>
+                    </NotiTop>
+                    <NotiQuote>"{item.body}"</NotiQuote>
+                    {item.created_at && <NotiMeta>{formatDateTime(item.created_at)}</NotiMeta>}
+                  </NotiCard>
+                ))}
+              </List>
+            </Section>
+          )}
+
+          {routineNotis.length > 0 && (
+            <Section>
+              <SectionTitle>오늘 루틴</SectionTitle>
+              <List>
+                {routineNotis.map((item, i) => {
+                  const match = item.title.match(ROUTINE_TITLE_PATTERN);
+                  return (
+                    <NotiCard key={`routine-${i}`}>
+                      <NotiTop>
+                        <NotiDot />
+                        {match ? (
+                          <NotiTitle>
+                            {match[1]} · <RemainingCount>{match[2]}</RemainingCount>{" "}
+                            <RemainingLabel>남았어요</RemainingLabel>
+                          </NotiTitle>
+                        ) : (
+                          <NotiTitle>{item.title}</NotiTitle>
+                        )}
+                      </NotiTop>
+                      {item.body && <NotiMeta>{item.body}</NotiMeta>}
+                    </NotiCard>
+                  );
+                })}
+              </List>
+            </Section>
+          )}
+
+          {clinicReplies.length === 0 && routineNotis.length === 0 && (
+            <NotiMeta>새 알림이 없어요.</NotiMeta>
+          )}
+        </>
+      )}
     </Wrapper>
   );
 };
@@ -165,13 +208,6 @@ const NotiQuote = styled.p`
   ${font("regbody")}
   line-height: 1.6;
   color: #111111;
-  margin: 0;
-`;
-
-const NotiContent = styled.p`
-  ${font("regbody")}
-  line-height: 1.6;
-  color: ${COLORS.text_gray};
   margin: 0;
 `;
 
