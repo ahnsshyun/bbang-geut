@@ -6,12 +6,15 @@ import CheckinTheme from "../components/CheckinTheme";
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import Layout, { Content, Spacer } from "../components/Layout";
-import { NoticeBox } from "../components/Box";
+import { NoticeBox, ErrorBox } from "../components/Box";
 import MainButton, { ShutterButton, CloseButton } from "../components/Button";
 
 import faceGuideFront from "../assets/faceGuideFront.svg";
 import faceGuideLeft from "../assets/faceGuideLeft.svg";
 import faceGuideRight from "../assets/faceGuideRight.svg";
+
+import { useCheckin } from "../hooks/useCheckin";
+import { uploadCheckinPhoto } from "../api/checkins";
 
 const STEPS = [
   { key: "front", label: "정면", shortLabel: "정면 컷", guideImage: faceGuideFront },
@@ -19,15 +22,19 @@ const STEPS = [
   { key: "right", label: "우측", shortLabel: "우측 컷", guideImage: faceGuideRight },
 ];
 
-const TODAY_LABEL = "D+4 체크인";
-const DATE_LABEL = "2026.08.07";
+function formatDotDate(isoDate) {
+  return isoDate ? isoDate.replaceAll("-", ".") : "";
+}
 
 const CheckinPhoto = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const { checkin, loading, error } = useCheckin();
 
   const [stepIndex, setStepIndex] = useState(0);
   const [photos, setPhotos] = useState({ front: null, left: null, right: null });
+  const [uploadError, setUploadError] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
   const currentStep = STEPS[stepIndex];
   const capturedCount = Object.values(photos).filter(Boolean).length;
@@ -35,21 +42,35 @@ const CheckinPhoto = () => {
   const isLastStep = stepIndex === STEPS.length - 1;
 
   const handleShutterClick = () => {
+    if (!checkin || isUploading) return;
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setPhotos((prev) => ({ ...prev, [currentStep.key]: url }));
     e.target.value = "";
+    if (!file || !checkin) return;
+
+    setUploadError("");
+    const previewUrl = URL.createObjectURL(file);
+    setPhotos((prev) => ({ ...prev, [currentStep.key]: previewUrl }));
+
+    setIsUploading(true);
+    try {
+      await uploadCheckinPhoto({ checkinId: checkin.checkinId, angle: currentStep.key, file });
+    } catch (err) {
+      setUploadError(
+        err.response?.data?.error?.message || "사진 업로드에 실패했어요. 다시 촬영해 주세요."
+      );
+      setPhotos((prev) => ({ ...prev, [currentStep.key]: null }));
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleNext = () => {
-    if (!isCurrentCaptured) return;
+    if (!isCurrentCaptured || isUploading) return;
     if (isLastStep) {
-      // TODO: 백엔드 업로드 연동
       navigate("/checkin/status");
       return;
     }
@@ -63,12 +84,32 @@ const CheckinPhoto = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <Layout>
+        <Content>
+          <p>체크인 정보를 불러오고 있어요...</p>
+        </Content>
+      </Layout>
+    );
+  }
+
+  if (error || !checkin) {
+    return (
+      <Layout>
+        <Content>
+          <ErrorBox>체크인을 시작하지 못했어요. 네트워크 상태를 확인해 주세요.</ErrorBox>
+        </Content>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <Content>
         <CheckinTheme
-          title={TODAY_LABEL}
-          date={DATE_LABEL}
+          title={`D+${checkin.day} 체크인`}
+          date={formatDotDate(checkin.date)}
           onClose={() => navigate("/home")}
           totalSteps={3}
           currentStep={1}
@@ -109,16 +150,23 @@ const CheckinPhoto = () => {
         </TabRow>
 
         <ShutterArea>
-          
-          <ShutterButton onClick={handleShutterClick} ariaLabel={`${currentStep.label} 촬영`} />
-          
-          <Spacer/>
-          
-          <NoticeBox>
-            반투명 기준 일러스트에 얼굴을 맞춰 주세요
-            <br />
-            매일 같은 각도로 찍을수록 변화가 정확하게 보여요
-          </NoticeBox>
+          <ShutterButton
+            onClick={handleShutterClick}
+            ariaLabel={`${currentStep.label} 촬영`}
+            disabled={isUploading}
+          />
+
+          <Spacer />
+
+          {uploadError ? (
+            <ErrorBox>{uploadError}</ErrorBox>
+          ) : (
+            <NoticeBox>
+              반투명 기준 일러스트에 얼굴을 맞춰 주세요
+              <br />
+              매일 같은 각도로 찍을수록 변화가 정확하게 보여요
+            </NoticeBox>
+          )}
         </ShutterArea>
 
         <input
@@ -132,8 +180,8 @@ const CheckinPhoto = () => {
 
         <Spacer />
 
-        <MainButton disabled={!isCurrentCaptured} onClick={handleNext}>
-          {isLastStep ? "완료" : "다음"}
+        <MainButton disabled={!isCurrentCaptured || isUploading} onClick={handleNext}>
+          {isUploading ? "업로드 중..." : isLastStep ? "완료" : "다음"}
         </MainButton>
       </Content>
     </Layout>

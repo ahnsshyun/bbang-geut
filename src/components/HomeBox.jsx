@@ -107,12 +107,6 @@ const CalendarLinkButton = styled.button`
   cursor: pointer;
 `;
 
-/**
- * props:
- * - dDay, surgeryDateLabel, stageLabel
- * - stats: [{ value, label }] (4개)
- * - onViewCalendar
- */
 export function ProgressCard({ dDay, surgeryDateLabel, stageLabel, stats = [], onViewCalendar }) {
   const progressPercent = (dDay / 120) * 100;
 
@@ -198,11 +192,6 @@ const CheckinDesc = styled.p`
   margin: 0;
 `;
 
-/**
- * props:
- * - done: 체크인 완료 여부
- * - dDay
- */
 export function CheckinBox({ done, dDay }) {
   return (
     <CheckinBoxEl $done={done}>
@@ -310,7 +299,7 @@ const CheckCircle = styled.button`
       $checked ? "transparent" : $variant === "drug" ? "#E0A800" : COLORS.sub};
   background: ${({ $checked, $variant }) =>
     $checked ? ($variant === "drug" ? "#E0A800" : COLORS.main) : "#ffffff"};
-  
+
   color: ${({ $checked, $variant }) =>
       $checked ? "#ffffff" : $variant === "drug" ? "#E0A800" : COLORS.main};
   ${font("boldbody")}
@@ -322,14 +311,6 @@ const CheckCircle = styled.button`
   padding: 0;
 `;
 
-/**
- * props:
- * - icon, title, meta, description
- * - totalChecks, checkedCount
- * - onToggleCheck: (index) => void
- * - onViewOriginal: () => void
- * - variant: "default" | "drug"
- */
 export function RoutineCard({
   icon,
   title,
@@ -338,7 +319,7 @@ export function RoutineCard({
   totalChecks,
   checkedCount,
   onToggleCheck,
-  onOpenDetail,          
+  onOpenDetail,
   variant = "default",
 }) {
   const allChecked = checkedCount >= totalChecks;
@@ -347,7 +328,7 @@ export function RoutineCard({
     <RoutineCardEl
       $variant={variant}
       $allChecked={allChecked}
-      onClick={onOpenDetail}   
+      onClick={onOpenDetail}
     >
       <RoutineTop>
         <RoutineTitleGroup>
@@ -368,7 +349,7 @@ export function RoutineCard({
                 $checked={checked}
                 $variant={variant}
                 onClick={(e) => {
-                  e.stopPropagation();     
+                  e.stopPropagation();
                   onToggleCheck(i);
                 }}
                 aria-label={`${i + 1}회차 ${checked ? "체크 해제" : "체크"}`}
@@ -407,7 +388,6 @@ const SectionTitle = styled.h2`
   margin: 0;
 `;
 
-
 export function RoutineSection({ title, doneCount, totalCount, children }) {
   return (
     <SectionWrapper>
@@ -420,7 +400,7 @@ export function RoutineSection({ title, doneCount, totalCount, children }) {
 }
 
 /* ============================================================
-   5. StatusSection — "오늘 해도 될까?" 섹션 안의 가능/주의/금지 
+   5. StatusSection — "오늘 해도 될까?" 섹션 안의 가능/주의/금지
 ============================================================ */
 const STATUS_STYLE = {
   ok: {
@@ -516,10 +496,6 @@ const StatusDesc = styled.p`
   margin: 0;
 `;
 
-/**
- * 개별 아이템 카드
- * props: icon, title, description, status("ok"|"caution"|"danger"), onClick
- */
 export function StatusCard({ icon, title, description, status, onClick }) {
   return (
     <StatusCardEl type="button" $status={status} onClick={onClick}>
@@ -532,10 +508,6 @@ export function StatusCard({ icon, title, description, status, onClick }) {
   );
 }
 
-/**
- * 전체 items를 status별로 그룹핑해서 "● 가능 (n)" 형태로 렌더링
- * props: items: [{ key, icon, title, description, status, onClick }]
- */
 export function StatusGroupList({ items = [] }) {
   const order = ["ok", "caution", "danger"];
 
@@ -550,7 +522,7 @@ export function StatusGroupList({ items = [] }) {
             <StatusGroupHeader>
               <StatusDot $status={status} />
               <StatusGroupLabel>
-                {STATUS_STYLE[status].groupLabel} 
+                {STATUS_STYLE[status].groupLabel}
               </StatusGroupLabel>
             </StatusGroupHeader>
 
@@ -580,6 +552,10 @@ const TIMELINE_STATUS_STYLE = {
   ok: { bg: "#E7F7EE", color: COLORS.text_green, label: "가능" },
   caution: { bg: "#FFF3CD", color: "#8A6300", label: "주의" },
   danger: { bg: "#FDEAEA", color: COLORS.error, label: "금지" },
+  // 아래 3개는 /api/v1/schedule 응답의 marker/upcoming type에 맞춰 추가함
+  return: { bg: COLORS.background_lightpurple, color: COLORS.main, label: "귀국" },
+  remote: { bg: "#EFEFEF", color: COLORS.text_gray, label: "원격" },
+  unlock: { bg: "#E7F7EE", color: COLORS.text_green, label: "해금" },
 };
 
 const TimelineWrapper = styled.div`
@@ -632,8 +608,8 @@ const TimelineBadge = styled.span`
   flex-shrink: 0;
   ${font("boldbody")}
   font-size: 12px;
-  color: ${({ $status }) => TIMELINE_STATUS_STYLE[$status].color};
-  background: ${({ $status }) => TIMELINE_STATUS_STYLE[$status].bg};
+  color: ${({ $status }) => TIMELINE_STATUS_STYLE[$status]?.color ?? COLORS.text_gray};
+  background: ${({ $status }) => TIMELINE_STATUS_STYLE[$status]?.bg ?? "#EFEFEF"};
   padding: 5px 12px;
   border-radius: 20px;
   white-space: nowrap;
@@ -641,8 +617,9 @@ const TimelineBadge = styled.span`
 
 /**
  * props:
- * - items: [{ key, date, dDay, label, status }]
- *   status: "visit" | "complete" | "ok" | "caution" | "danger"
+ * - items: [{ key, date, dDay, label, status, badgeLabel? }]
+ *   status: "visit" | "complete" | "ok" | "caution" | "danger" | "return" | "remote" | "unlock"
+ *   badgeLabel을 주면 뱃지 텍스트로 그걸 우선 사용(서버가 이미 번역해서 준 문구가 있을 때).
  */
 export function TimelineSection({ items = [] }) {
   return (
@@ -653,7 +630,7 @@ export function TimelineSection({ items = [] }) {
           <TimelineDDay>{item.dDay}</TimelineDDay>
           <TimelineLabel>{item.label}</TimelineLabel>
           <TimelineBadge $status={item.status}>
-            {TIMELINE_STATUS_STYLE[item.status].label}
+            {item.badgeLabel ?? TIMELINE_STATUS_STYLE[item.status]?.label ?? item.status}
           </TimelineBadge>
         </TimelineRow>
       ))}
