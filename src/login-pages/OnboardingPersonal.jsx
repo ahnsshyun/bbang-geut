@@ -5,22 +5,14 @@ import { useNavigate } from "react-router-dom";
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import Layout, { Content, Spacer } from "../components/Layout";
-import LoginTheme from "../components/LoginTheme";
+import LoginTheme from "../components/Theme/LoginTheme";
 import Button from "../components/Button";
-import { InfoBox } from "../components/Box";
+import { InfoBox } from "../components/Box/Box";
+import { useLang } from "../hooks/useLang";
 
 import Calendar from "../components/Calendar";
 import { getOnboardingQuestions, getSurgeryInfo, completeOnboarding } from "../api/onboarding";
-import { ErrorBox } from "../components/Box";
-
-// TODO: 실제 "비행 규칙" 구간 기준(명세서 3.4 귀국 예정일 항목)이 API로 안 내려와서
-// 프론트에서 임시로 추정한 경계값입니다. 서버가 계산해서 내려주는 게 이상적이에요.
-function getFlightZone(dn) {
-  if (dn === null) return null;
-  if (dn <= 6) return { label: "금지", token: "danger" };
-  if (dn <= 13) return { label: "주의", token: "warning" };
-  return { label: "가능", token: "success" };
-}
+import { ErrorBox } from "../components/Box/Box";
 
 // TODO: colors.js에 danger/warning/success 색상이 없어 임시 매핑했습니다.
 const ZONE_COLORS = {
@@ -57,14 +49,24 @@ function formatISODate(date) {
 
 const OnboardingPersonal = () => {
   const navigate = useNavigate();
+  const { t } = useLang();
+
+  // TODO: 실제 "비행 규칙" 구간 기준(명세서 3.4 귀국 예정일 항목)이 API로 안 내려와서
+  // 프론트에서 임시로 추정한 경계값입니다. 서버가 계산해서 내려주는 게 이상적이에요.
+  function getFlightZone(dn) {
+    if (dn === null) return null;
+    if (dn <= 6) return { label: t("zoneDanger"), token: "danger" };
+    if (dn <= 13) return { label: t("zoneWarning"), token: "warning" };
+    return { label: t("zoneSuccess"), token: "success" };
+  }
 
   const [questions, setQuestions] = useState(null);
-  const [returnDateRange, setReturnDateRange] = useState(null); // { min, max, default }
+  const [returnDateRange, setReturnDateRange] = useState(null);
   const [surgeryDate, setSurgeryDate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [answers, setAnswers] = useState({}); // { [questionKey]: true | false | undefined }
+  const [answers, setAnswers] = useState({});
   const [returnDate, setReturnDate] = useState(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,7 +83,10 @@ const OnboardingPersonal = () => {
 
         // TODO: 라벨 텍스트("수술일")로 찾는 임시 방식. 서버가 surgery_date를
         // questions 응답에 직접 내려주면 이 부분 제거하고 그 필드 쓰면 됨.
-        const surgeryRow = surgeryRes.rows.find((r) => r.label === "수술일");
+        // 주의: t("surgeryDateLabel")이 아니라, 서버가 실제로 내려주는 한국어 라벨과
+        // 정확히 일치해야 이 로직이 작동합니다. lang=ja로 받으면 label도 일본어라
+        // 이 find가 실패할 수 있으니, 서버가 surgeryDate 전용 필드를 내려주는 게 안전합니다.
+        const surgeryRow = surgeryRes.rows.find((r) => r.key === "surgery_date");
         setSurgeryDate(surgeryRow ? new Date(surgeryRow.value) : null);
       })
       .catch((err) => {
@@ -128,15 +133,11 @@ const OnboardingPersonal = () => {
         returnDate: formatISODate(new Date(returnDate)),
       });
 
-      // TODO: 전역 상태/서버 세션이 없어 다음 화면(완료)으로 값 전달용으로 localStorage 사용
       localStorage.setItem("naranhi_onboarding_result", JSON.stringify(result));
 
       navigate("/onboarding/complete");
     } catch (err) {
-      setSubmitError(
-        err.response?.data?.detail ||
-          "케어 루틴을 만드는 중 문제가 발생했어요. 다시 시도해 주세요."
-      );
+      setSubmitError(err.response?.data?.detail || t("createRoutineFail"));
     } finally {
       setIsSubmitting(false);
     }
@@ -146,7 +147,7 @@ const OnboardingPersonal = () => {
     return (
       <Layout>
         <Content>
-          <LoginTheme step="STEP 3/3 · 개인 변수" title="질문을 불러오고 있어요" />
+          <LoginTheme step={t("step3")} title={t("loadingQuestions")} />
         </Content>
       </Layout>
     );
@@ -157,13 +158,13 @@ const OnboardingPersonal = () => {
       <Layout>
         <Content>
           <LoginTheme
-            step="STEP 3/3 · 개인 변수"
-            title="정보를 불러오지 못했어요"
-            desc="네트워크 상태를 확인하고 다시 시도해 주세요"
+            step={t("step3")}
+            title={t("infoLoadFail")}
+            desc={t("checkNetwork")}
           />
           <Spacer />
           <Button type="button" onClick={() => window.location.reload()}>
-            다시 시도
+            {t("retry")}
           </Button>
         </Content>
       </Layout>
@@ -174,9 +175,9 @@ const OnboardingPersonal = () => {
     <Layout>
       <Content>
         <LoginTheme
-          step="STEP 3/3 · 개인 변수"
-          title="3가지만 확인할게요"
-          desc="병원 문서만으로는 알 수 없어 직접 여쭤봐요."
+          step={t("step3")}
+          title={t("personalTitle")}
+          desc={t("personalDesc")}
         />
         <Spacer />
 
@@ -191,36 +192,33 @@ const OnboardingPersonal = () => {
                   $active={answers[q.key] === true}
                   onClick={() => handleAnswer(q.key, true)}
                 >
-                  예
+                  {t("yes")}
                 </ToggleButton>
                 <ToggleButton
                   type="button"
                   $active={answers[q.key] === false}
                   onClick={() => handleAnswer(q.key, false)}
                 >
-                  아니오
+                  {t("no")}
                 </ToggleButton>
               </ToggleRow>
             ) : (
-              // TODO: answer_type이 bool 외 다른 값으로 오는 경우 UI 미정의 상태
-              <QuestionHint>이 질문 형식({q.answer_type})은 아직 지원하지 않아요.</QuestionHint>
+              <QuestionHint>{t("unsupportedAnswerType").replace("{type}", q.answer_type)}</QuestionHint>
             )}
           </InfoBox>
         ))}
 
         <InfoBox style={{ padding: "16px", position: "relative", overflow: "visible" }}>
-          <QuestionTitle>귀국 예정일을 입력해주세요</QuestionTitle>
-          <QuestionHint>
-            항공권에 적힌 날짜 그대로 넣어주세요. 이 날짜를 회복 루틴에 반영합니다.
-          </QuestionHint>
+          <QuestionTitle>{t("returnDateTitle")}</QuestionTitle>
+          <QuestionHint>{t("returnDateHint")}</QuestionHint>
 
           <DateRow>
             <DateField
               type="button"
               onClick={() => setIsCalendarOpen((prev) => !prev)}
             >
-              <span>{returnDate ? formatSlash(new Date(returnDate)) : "MM / DD / YYYY"}</span>
-              <span role="img" aria-label="달력">
+              <span>{returnDate ? formatSlash(new Date(returnDate)) : t("dateFieldPlaceholder")}</span>
+              <span role="img" aria-label={t("calendarAria")}>
                 📆
               </span>
             </DateField>
@@ -235,17 +233,17 @@ const OnboardingPersonal = () => {
                 minDate={new Date(returnDateRange.min)}
                 maxDate={new Date(returnDateRange.max)}
                 markedDate={surgeryDate}
-                markedLabel="수술일"
+                markedLabel={t("surgeryDateLabel")}
               />
             </CalendarPopover>
           )}
 
           {returnDate && flightZone && (
             <DateHint>
-              <b>수술일 {formatDot(surgeryDate)} </b>기준{" "}
-              귀국일이 비행{" "}
+              <b>{t("surgeryDateLabel")} {formatDot(surgeryDate)} </b>{t("baseOn")}{" "}
+              {t("returnFlightPrefix")}{" "}
               <ZoneLabel $token={flightZone.token}>{flightZone.label}</ZoneLabel>{" "}
-              구간에 들어갑니다.
+              {t("flightZoneSuffix")}
             </DateHint>
           )}
         </InfoBox>
@@ -259,7 +257,7 @@ const OnboardingPersonal = () => {
           disabled={!isComplete || isSubmitting}
           onClick={handleCreateRoutine}
         >
-          {isSubmitting ? "만드는 중..." : "케어 루틴 만들기"}
+          {isSubmitting ? t("creating") : t("createRoutine")}
         </Button>
       </Content>
     </Layout>

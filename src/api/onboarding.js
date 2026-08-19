@@ -4,8 +4,10 @@ import apiClient from "./client";
  * GET /api/v1/onboarding/status
  * 자료 수신 현황(documents) + 처방 등록 여부(prescription) + 다음 단계 진행 가능 여부(can_proceed)
  */
-export async function getOnboardingStatus() {
-  const { data } = await apiClient.get("/api/v1/onboarding/status");
+export async function getOnboardingStatus({ lang } = {}) {
+  const { data } = await apiClient.get("/api/v1/onboarding/status", {
+    params: lang ? { lang } : undefined,
+  });
   return data;
 }
 

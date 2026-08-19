@@ -65,7 +65,8 @@ const Calendar = ({
             const isToday = isSameDay(date, new Date());
             const isHospitalVisit = hospitalVisitDates.some((d) => isSameDay(d, date));
             const isReturnDay = isSameDay(date, returnDate);
-            const isCompleteDay = isSameDay(date, completeDate);const hasCheckin = checkinDates.some((d) => isSameDay(d, date));
+            const isCompleteDay = isSameDay(date, completeDate);
+            const hasCheckin = checkinDates.some((d) => isSameDay(d, date));
 
             return (
               <DayCell

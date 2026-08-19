@@ -4,13 +4,16 @@ import { useNavigate } from "react-router-dom";
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import Calendar from "../components/Calendar";
-import HomeTheme from "../components/HomeTheme";
+import HomeTheme from "../components/Theme/HomeTheme";
 import { Spacer } from "../components/Layout";
-import { RoutineSection, TimelineSection } from "../components/HomeBox";
+import { RoutineSection, TimelineSection } from "../components/Box/HomeBox";
 import { CloseButton } from "../components/Button";
+import { ScheduleDayModal } from "../components/Modal/ScheduleModal";
 
 import { getSchedule, getScheduleDay } from "../api/schedule";
 import { getHome } from "../api/home";
+import { getStoredPatient } from "../api/auth";
+import { useLang } from "../hooks/useLang";
 
 function parseISODate(str) {
   // "2026-08-08" → Date (로컬 타임존 자정)
@@ -44,6 +47,7 @@ function splitMarkersByType(markers) {
 
 const Schedule = () => {
   const navigate = useNavigate();
+  const { t } = useLang();
   const [selectedDate, setSelectedDate] = useState(null);
 
   const [schedule, setSchedule] = useState(null);
@@ -57,7 +61,10 @@ const Schedule = () => {
   useEffect(() => {
     let cancelled = false;
 
-    Promise.all([getSchedule(), getHome()])
+  const patient = getStoredPatient();
+  const lang = patient?.lang || "ko";
+
+    Promise.all([getSchedule({ lang }), getHome()])
       .then(([scheduleRes, homeRes]) => {
         if (cancelled) return;
         setSchedule(scheduleRes);
@@ -84,7 +91,8 @@ const Schedule = () => {
     setDayDetail(null);
     setDayDetailLoading(true);
 
-    getScheduleDay({ date: formatISODate(date) })
+  const patient = getStoredPatient();
+  getScheduleDay({ date: formatISODate(date), lang: patient?.lang || "ko" })
       .then((data) => setDayDetail(data))
       .catch(() => setDayDetail(null))
       .finally(() => setDayDetailLoading(false));
@@ -93,7 +101,7 @@ const Schedule = () => {
   if (loading) {
     return (
       <HomeTheme bannerTitle="나란히">
-        <p>불러오는 중이에요...</p>
+        <p>{t("loading")}</p>
       </HomeTheme>
     );
   }
@@ -101,7 +109,7 @@ const Schedule = () => {
   if (error || !schedule || !surgeryDate) {
     return (
       <HomeTheme bannerTitle="나란히">
-        <p>일정을 불러오지 못했어요. 네트워크 상태를 확인해 주세요.</p>
+        <p>{t("loadError")}</p>
       </HomeTheme>
     );
   }
@@ -120,14 +128,14 @@ const Schedule = () => {
   return (
     <HomeTheme bannerTitle="나란히">
       <Header>
-        <Title>전체 일정</Title>
+        <Title>{t("scheduleTitle")}</Title>
         <CloseButton type="button" onClick={() => navigate("/home")} aria-label="닫기">
           ✕
         </CloseButton>
       </Header>
 
       <Description>
-        날짜를 누르면, 가능 / 주의 / 금지 항목의 변화를 볼 수 있어요.
+        {t("scheduleDesc")}
       </Description>
 
       <Calendar
@@ -143,38 +151,38 @@ const Schedule = () => {
       <LegendRow>
         <LegendItem>
           <LegendDot />
-          <span>수술일</span>
+          <span>{t("legendSurgery")}</span>
         </LegendItem>
         <LegendItem>
           <span>✈️</span>
-          <span>귀국 예정일</span>
+          <span>{t("legendReturn")}</span>
         </LegendItem>
         <LegendItem>
           <span>🏆</span>
-          <span>완주일</span>
+          <span>{t("legendComplete")}</span>
         </LegendItem>
       </LegendRow>
 
-      {selectedDate && (
-        <SelectedInfo>
-          {dayDetailLoading ? (
-            "불러오는 중이에요..."
-          ) : dayDetail ? (
-            <>
-              <b>D+{dayDetail.day} · {dayDetail.stage}</b>
-              <br />
-              가능 {dayDetail.rules.ok?.count ?? 0} · 주의 {dayDetail.rules.care?.count ?? 0} · 금지{" "}
-              {dayDetail.rules.no?.count ?? 0}
-            </>
-          ) : (
-            "이 날짜의 정보를 불러오지 못했어요."
-          )}
-        </SelectedInfo>
+      {selectedDate && !dayDetailLoading && dayDetail && (
+        <ScheduleDayModal
+          dDayLabel={`D+${dayDetail.day}`}
+          dateLabel={formatISODate(selectedDate).replace(/-/g, ".")}
+          stageLabel={dayDetail.stage}
+    routines={(dayDetail.tasks ?? []).map((task) =>
+      task.times_per_day > 1 ? `${task.name} · ${task.times_per_day}${t("times")}` : task.name
+    )}
+          statusGroups={{
+            ok: (dayDetail.rules.ok?.items ?? []).map((i) => i.name),
+            care: (dayDetail.rules.care?.items ?? []).map((i) => i.name),
+            no: (dayDetail.rules.no?.items ?? []).map((i) => i.name),
+          }}
+          onClose={() => setSelectedDate(null)}
+        />
       )}
 
       <Spacer />
 
-      <RoutineSection title="앞으로의 변화">
+      <RoutineSection title={t("scheduleUpcoming")}>
         <TimelineSection items={timelineItems} />
       </RoutineSection>
     </HomeTheme>
@@ -227,13 +235,4 @@ const LegendDot = styled.span`
   border-radius: 50%;
   background: ${COLORS.main};
   border: 2px solid ${COLORS.sub};
-`;
-
-const SelectedInfo = styled.div`
-  margin-top: 16px;
-  padding: 16px;
-  border-radius: 12px;
-  background: ${COLORS.background_lightpurple};
-  ${font("regbody")}
-  color: ${COLORS.main};
 `;

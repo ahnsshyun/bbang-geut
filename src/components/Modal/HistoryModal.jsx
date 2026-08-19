@@ -1,8 +1,9 @@
 import styled from "styled-components";
-import COLORS from "../styles/colors";
-import FONTS, { font } from "../styles/fonts";
+import COLORS from "../../styles/colors";
+import FONTS, { font } from "../../styles/fonts";
 import { Modal } from "./Modal";
-import historyIcon from "../assets/historyIcon.svg";
+import historyIcon from "../../assets/historyIcon.svg";
+import { useLang } from "../../hooks/useLang";
 
 /* ============================================================
    DayDetailHeader — 모달 상단 (아이콘+제목+날짜)
@@ -26,11 +27,12 @@ const DayDetailDate = styled.p`
 `;
 
 function DayDetailHeader({ dDayLabel, dateLabel }) {
+  const { t } = useLang();
   return (
     <DayDetailHeaderRow>
-      <img src={historyIcon} alt="체크인 아이콘" width={55} height={55} />
+      <img src={historyIcon} alt={t("checkinIconAlt")} width={55} height={55} />
       <div>
-        <DayDetailTitle>{dDayLabel} 체크인</DayDetailTitle>
+        <DayDetailTitle>{dDayLabel} {t("checkinLabel")}</DayDetailTitle>
         <DayDetailDate>{dateLabel}</DayDetailDate>
       </div>
     </DayDetailHeaderRow>
@@ -56,25 +58,40 @@ const DayPhotoCard = styled.div`
   flex: 1;
   height: 110px;
   border-radius: 12px;
-  background: linear-gradient(180deg, #B8A9F5, #8C6FEC);
+  position: relative;
+  overflow: hidden;
+  background: ${({ $hasImage }) => ($hasImage ? "#e0e0e0" : "linear-gradient(180deg, #B8A9F5, #8C6FEC)")};
   display: flex;
   align-items: flex-end;
   padding: 8px;
   box-sizing: border-box;
 `;
 
+const DayPhotoImg = styled.img`
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
 const DayPhotoLabel = styled.span`
   ${font("boldbody")}
   color: #ffffff;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 `;
 
 function DayPhotoRow({ photos = [] }) {
+  const { t } = useLang();
   return (
     <div>
-      <DaySectionTitle>사진</DaySectionTitle>
+      <DaySectionTitle>{t("photoSectionTitle")}</DaySectionTitle>
       <DayPhotoGrid>
         {photos.map((p, i) => (
-          <DayPhotoCard key={i}>
+          <DayPhotoCard key={i} $hasImage={!!p.url}>
+            {p.url && <DayPhotoImg src={p.url} alt={p.label} />}
             <DayPhotoLabel>{p.label}</DayPhotoLabel>
           </DayPhotoCard>
         ))}
@@ -112,9 +129,10 @@ const DaySymptomLevel = styled.div`
 `;
 
 function DaySymptomRow({ symptoms = [] }) {
+  const { t } = useLang();
   return (
     <div>
-      <DaySectionTitle>상태 흐름</DaySectionTitle>
+      <DaySectionTitle>{t("statusFlowTitle")}</DaySectionTitle>
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {symptoms.map((symptom) => (
           <DaySymptomGroup key={symptom.key}>
@@ -152,9 +170,10 @@ const CareTag = styled.span`
 `;
 
 function DayCareTagList({ tags = [] }) {
+  const { t } = useLang();
   return (
     <div>
-      <DaySectionTitle>기록된 자가 케어</DaySectionTitle>
+      <DaySectionTitle>{t("selfCareRecordTitle")}</DaySectionTitle>
       <CareTagWrap>
         {tags.map((tag, i) => (
           <CareTag key={i}>{tag}</CareTag>
@@ -183,10 +202,11 @@ const EmptyStateText = styled.p`
 `;
 
 function NoCheckinState() {
+  const { t } = useLang();
   return (
     <EmptyStateWrap>
       <span style={{ fontSize: 32 }}>❕</span>
-      <EmptyStateText>체크인 기록이 없습니다</EmptyStateText>
+      <EmptyStateText>{t("noCheckinRecord2")}</EmptyStateText>
     </EmptyStateWrap>
   );
 }

@@ -1,9 +1,9 @@
 import styled from "styled-components";
-import COLORS from "../styles/colors";
-import FONTS, { font } from "../styles/fonts";
-import { CloseButton } from "./Button";
-
-import { DrugBox, NoticeBox } from "./Box";
+import COLORS from "../../styles/colors";
+import FONTS, { font } from "../../styles/fonts";
+import { CloseButton } from "../Button";
+import { DrugBox, NoticeBox } from "../Box/Box";
+import { useLang } from "../../hooks/useLang";
 
 /* ---------- 공용 바텀시트 뼈대 ---------- */
 const ModalOverlay = styled.div`
@@ -61,6 +61,8 @@ export function Modal({
   showCloseButton = true,
   children,
 }) {
+  const { t } = useLang();
+
   return (
     <ModalOverlay onClick={onClose}>
       <ModalSheet onClick={(e) => e.stopPropagation()}>
@@ -70,7 +72,7 @@ export function Modal({
           <ModalHeaderRow>
             <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
             {showCloseIcon && (
-              <CloseButton type="button" onClick={onClose} aria-label="닫기">
+              <CloseButton type="button" onClick={onClose} aria-label={t("modalClose")}>
                 ✕
               </CloseButton>
             )}
@@ -184,10 +186,13 @@ export function RoutineDetailModal({
   originalQuote,
   disclaimer,
   onClose,
-  questionLabel = "왜 해야 하나요?",
+  questionLabel,
   status,
 
 }) {
+  const { t } = useLang();
+  const resolvedQuestionLabel = questionLabel ?? t("modalWhy");
+
   return (
     <Modal
       onClose={onClose}
@@ -195,7 +200,7 @@ export function RoutineDetailModal({
         <ModalTitleGroup>
           <ModalIconWrap>{icon}</ModalIconWrap>
           <div style={{ flex: 1 }}>
-            <ModalTitle>{title}</ModalTitle>
+            <ModalSectionTitle>{resolvedQuestionLabel}</ModalSectionTitle>
             <ModalMeta>{meta}</ModalMeta>
           </div>
         
@@ -210,7 +215,7 @@ export function RoutineDetailModal({
 
       {steps.length > 0 && (
       <div>
-        <ModalSectionTitle>어떻게 하나요?</ModalSectionTitle>
+        <ModalSectionTitle>{t("modalHowTo")}</ModalSectionTitle>
         <QuoteBox style={{ background: `${COLORS.background_lightpurple}4D` }}>
         <ModalStepList>
           {steps.map((step, i) => (
@@ -222,7 +227,7 @@ export function RoutineDetailModal({
       )}
 
       <div>
-        <ModalSectionTitle>병원 안내문 원문</ModalSectionTitle>
+        <ModalSectionTitle>{t("modalOriginalDoc")}</ModalSectionTitle>
         <QuoteBox>
           <OriginalQuoteText>"{originalQuote}"</OriginalQuoteText>
         </QuoteBox>
@@ -295,6 +300,8 @@ export function DrugDetailModal({
   periodNote,
   onClose,
 }) {
+  const { t } = useLang();
+
   return (
     <Modal
       onClose={onClose}
@@ -307,7 +314,7 @@ export function DrugDetailModal({
     >
       {requiredDrugs.length > 0 && (
         <div>
-          <RequiredSectionTitle>정해진 시간에 복용해야 하는 약 {requiredDrugs.length}종</RequiredSectionTitle>
+          <RequiredSectionTitle>{t("requiredDrugTitle")} {requiredDrugs.length}{t("drugUnit")}</RequiredSectionTitle>
           <DrugListWrap style={{ marginTop: 12 }}>
             {requiredDrugs.map((drug, i) => (
               <DrugBox key={i} {...drug} asNeeded={false} />
@@ -318,7 +325,7 @@ export function DrugDetailModal({
 
       {asNeededDrugs.length > 0 && (
         <div>
-          <AsNeededSectionTitle>필요시 약 {asNeededDrugs.length}종</AsNeededSectionTitle>
+          <AsNeededSectionTitle>{t("asNeededDrugTitle")} {asNeededDrugs.length}{t("drugUnit")}</AsNeededSectionTitle>
           <DrugListWrap style={{ marginTop: 12 }}>
             {asNeededDrugs.map((drug, i) => (
               <DrugBox key={i} {...drug} asNeeded={true} />

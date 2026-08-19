@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getMe, getStoredMe, saveMeSession } from "../api/auth";
+import { getStoredPatient } from "../api/auth";
 
 /**
  * /api/v1/me 응답(환자·수술·병원 정보)을 불러오는 훅.
@@ -17,6 +18,9 @@ export function useMe() {
     let cancelled = false;
     setLoading(true);
     setError(null);
+
+    const patient = getStoredPatient();
+    const lang = patient?.lang || "ko";
 
     getMe()
       .then((data) => {

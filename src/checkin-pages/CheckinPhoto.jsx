@@ -1,12 +1,12 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 
-import CheckinTheme from "../components/CheckinTheme";
+import CheckinTheme from "../components/Theme/CheckinTheme";
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import Layout, { Content, Spacer } from "../components/Layout";
-import { NoticeBox, ErrorBox } from "../components/Box";
+import { NoticeBox, ErrorBox } from "../components/Box/Box";
 import MainButton, { ShutterButton, CloseButton } from "../components/Button";
 
 import faceGuideFront from "../assets/faceGuideFront.svg";
@@ -15,12 +15,7 @@ import faceGuideRight from "../assets/faceGuideRight.svg";
 
 import { useCheckin } from "../hooks/useCheckin";
 import { uploadCheckinPhoto } from "../api/checkins";
-
-const STEPS = [
-  { key: "front", label: "정면", shortLabel: "정면 컷", guideImage: faceGuideFront },
-  { key: "left", label: "좌측", shortLabel: "좌측 컷", guideImage: faceGuideLeft },
-  { key: "right", label: "우측", shortLabel: "우측 컷", guideImage: faceGuideRight },
-];
+import { useLang } from "../hooks/useLang";
 
 function formatDotDate(isoDate) {
   return isoDate ? isoDate.replaceAll("-", ".") : "";
@@ -30,11 +25,25 @@ const CheckinPhoto = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const { checkin, loading, error } = useCheckin();
+  const { t } = useLang();
+
+  const STEPS = [
+    { key: "front", label: t("front"), shortLabel: t("frontShot"), guideImage: faceGuideFront },
+    { key: "left", label: t("left"), shortLabel: t("leftShot"), guideImage: faceGuideLeft },
+    { key: "right", label: t("right"), shortLabel: t("rightShot"), guideImage: faceGuideRight },
+  ];
+
 
   const [stepIndex, setStepIndex] = useState(0);
   const [photos, setPhotos] = useState({ front: null, left: null, right: null });
   const [uploadError, setUploadError] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    if (checkin?.completed) {
+      navigate("/checkin/complete", { replace: true });
+    }
+  }, [checkin, navigate]);
 
   const currentStep = STEPS[stepIndex];
   const capturedCount = Object.values(photos).filter(Boolean).length;
@@ -60,7 +69,7 @@ const CheckinPhoto = () => {
       await uploadCheckinPhoto({ checkinId: checkin.checkinId, angle: currentStep.key, file });
     } catch (err) {
       setUploadError(
-        err.response?.data?.error?.message || "사진 업로드에 실패했어요. 다시 촬영해 주세요."
+        err.response?.data?.error?.message || t("photoUploadFail")
       );
       setPhotos((prev) => ({ ...prev, [currentStep.key]: null }));
     } finally {
@@ -88,7 +97,7 @@ const CheckinPhoto = () => {
     return (
       <Layout>
         <Content>
-          <p>체크인 정보를 불러오고 있어요...</p>
+          <p>{t("loadingCheckin")}</p>
         </Content>
       </Layout>
     );
@@ -98,7 +107,7 @@ const CheckinPhoto = () => {
     return (
       <Layout>
         <Content>
-          <ErrorBox>체크인을 시작하지 못했어요. 네트워크 상태를 확인해 주세요.</ErrorBox>
+          <ErrorBox>{t("checkinStartError")}</ErrorBox>
         </Content>
       </Layout>
     );
@@ -108,7 +117,7 @@ const CheckinPhoto = () => {
     <Layout>
       <Content>
         <CheckinTheme
-          title={`D+${checkin.day} 체크인`}
+          title={`D+${checkin.day} ${t("checkinTitle")}`}
           date={formatDotDate(checkin.date)}
           onClose={() => navigate("/home")}
           totalSteps={3}
@@ -116,7 +125,7 @@ const CheckinPhoto = () => {
         />
 
         <RecordRow>
-          <RecordLabel>변화 기록</RecordLabel>
+          <RecordLabel>{t("changeRecord")}</RecordLabel>
           <RecordCount>{capturedCount}/3</RecordCount>
         </RecordRow>
 
@@ -125,7 +134,7 @@ const CheckinPhoto = () => {
             <PreviewImage src={photos[currentStep.key]} alt={currentStep.label} />
           ) : (
             <GuideBox>
-              <GuideSilhouette src={currentStep.guideImage} alt={`${currentStep.label} 가이드`} />
+              <GuideSilhouette src={currentStep.guideImage} alt={`${currentStep.label} ${t("guideAlt")}`} />
             </GuideBox>
           )}
         </CameraFrame>
@@ -152,7 +161,7 @@ const CheckinPhoto = () => {
         <ShutterArea>
           <ShutterButton
             onClick={handleShutterClick}
-            ariaLabel={`${currentStep.label} 촬영`}
+            ariaLabel={`${currentStep.label} ${t("shootAction")}`}
             disabled={isUploading}
           />
 
@@ -162,9 +171,9 @@ const CheckinPhoto = () => {
             <ErrorBox>{uploadError}</ErrorBox>
           ) : (
             <NoticeBox>
-              반투명 기준 일러스트에 얼굴을 맞춰 주세요
+              {t("guideText1")}
               <br />
-              매일 같은 각도로 찍을수록 변화가 정확하게 보여요
+              {t("guideText2")}
             </NoticeBox>
           )}
         </ShutterArea>
@@ -181,7 +190,7 @@ const CheckinPhoto = () => {
         <Spacer />
 
         <MainButton disabled={!isCurrentCaptured || isUploading} onClick={handleNext}>
-          {isUploading ? "업로드 중..." : isLastStep ? "완료" : "다음"}
+          {isUploading ? t("uploading") : isLastStep ? t("complete") : t("next")}
         </MainButton>
       </Content>
     </Layout>

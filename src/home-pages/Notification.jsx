@@ -4,13 +4,17 @@ import { useNavigate } from "react-router-dom";
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import { CloseButton } from "../components/Button";
+import { useLang } from "../hooks/useLang";
+import { getStoredPatient } from "../api/auth";
 
 import { getNotifications } from "../api/notifications";
 
 // 루틴 알림 title이 "짧은 보행 · 3회 남았어요" 형태로 미리 조합돼서 오기 때문에,
 // 기존 디자인처럼 "3회" 부분만 초록색으로 강조하려고 다시 분리합니다.
 // 패턴이 안 맞으면(형식이 바뀌면) 그냥 title 전체를 평범하게 보여줍니다.
-const ROUTINE_TITLE_PATTERN = /^(.+?)\s*·\s*(\d+회)\s*남았어요$/;
+// TODO: 일본어 응답 문구를 확인해서 ROUTINE_TITLE_PATTERN_JA도 만들어야 함.
+const ROUTINE_TITLE_PATTERN_KO = /^(.+?)\s*·\s*(\d+회)\s*남았어요$/;
+const ROUTINE_TITLE_PATTERN_JA = /^(.+?)\s*・\s*(あと\d+回)$/;
 
 function formatDateTime(isoDatetime) {
   const d = new Date(isoDatetime);
@@ -23,14 +27,20 @@ function formatDateTime(isoDatetime) {
 
 const Notification = () => {
   const navigate = useNavigate();
+  const { t, lang } = useLang();
   const [items, setItems] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const ROUTINE_TITLE_PATTERN = lang === "ja" ? ROUTINE_TITLE_PATTERN_JA : ROUTINE_TITLE_PATTERN_KO;
+
   useEffect(() => {
     let cancelled = false;
 
-    getNotifications()
+    const patient = getStoredPatient();
+    const requestLang = patient?.lang || "ko";
+
+    getNotifications({ lang: requestLang })
       .then((data) => {
         if (!cancelled) setItems(data.items);
       })
@@ -52,20 +62,20 @@ const Notification = () => {
   return (
     <Wrapper>
       <Header>
-        <Title>알림</Title>
-        <CloseButton type="button" onClick={() => navigate(-1)} aria-label="닫기">
+        <Title>{t("notificationTitle")}</Title>
+        <CloseButton type="button" onClick={() => navigate(-1)} aria-label={t("close")}>
           ✕
         </CloseButton>
       </Header>
 
-      {loading && <NotiMeta>불러오는 중이에요...</NotiMeta>}
-      {error && <NotiMeta>알림을 불러오지 못했어요.</NotiMeta>}
+      {loading && <NotiMeta>{t("loadingNotifications")}</NotiMeta>}
+      {error && <NotiMeta>{t("notificationLoadFail")}</NotiMeta>}
 
       {!loading && !error && (
         <>
           {clinicReplies.length > 0 && (
             <Section>
-              <SectionTitle>병원 답변</SectionTitle>
+              <SectionTitle>{t("clinicReplySection")}</SectionTitle>
               <List>
                 {clinicReplies.map((item, i) => (
                   <NotiCard key={`reply-${i}`}>
@@ -83,7 +93,7 @@ const Notification = () => {
 
           {routineNotis.length > 0 && (
             <Section>
-              <SectionTitle>오늘 루틴</SectionTitle>
+              <SectionTitle>{t("todayRoutineSection")}</SectionTitle>
               <List>
                 {routineNotis.map((item, i) => {
                   const match = item.title.match(ROUTINE_TITLE_PATTERN);
@@ -93,8 +103,8 @@ const Notification = () => {
                         <NotiDot />
                         {match ? (
                           <NotiTitle>
-                            {match[1]} · <RemainingCount>{match[2]}</RemainingCount>{" "}
-                            <RemainingLabel>남았어요</RemainingLabel>
+                            {match[1]} · <RemainingCount>{match[2]}</RemainingCount>
+                            {lang !== "ja" && <> <RemainingLabel>{t("remainingLabel")}</RemainingLabel></>}
                           </NotiTitle>
                         ) : (
                           <NotiTitle>{item.title}</NotiTitle>
@@ -109,7 +119,7 @@ const Notification = () => {
           )}
 
           {clinicReplies.length === 0 && routineNotis.length === 0 && (
-            <NotiMeta>새 알림이 없어요.</NotiMeta>
+            <NotiMeta>{t("noNewNotifications")}</NotiMeta>
           )}
         </>
       )}

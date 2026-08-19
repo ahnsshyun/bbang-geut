@@ -1,6 +1,6 @@
 import styled from 'styled-components';
-import COLORS from '../styles/colors';
-import FONTS, { font } from '../styles/fonts';
+import COLORS from '../../styles/colors';
+import FONTS, { font } from '../../styles/fonts';
 
 /* ============================================================
    1. NoticeBox — 회색 안내 박스 (내용 텍스트만)

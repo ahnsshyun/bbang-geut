@@ -4,16 +4,25 @@ import { useNavigate } from "react-router-dom";
 
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
+import { setCurrentLang } from "../hooks/useLang";
+import { dict } from "../i18n";
 
 const LANGUAGES = [
   { code: "ko", name: "한국어" },
   { code: "ja", name: "日本語" },
-  { code: "en", name: "English" },
 ];
 
 const Splash = () => {
   const navigate = useNavigate();
   const [lang, setLang] = useState(null);
+
+  // 아직 언어를 선택 안 했으면 기본 한국어로 미리보기, 선택하면 그 언어로 즉시 전환
+  const previewLang = lang ?? "ko";
+  const t = (key) => dict[previewLang]?.[key] ?? dict.ko[key] ?? key;
+
+  const handleSelectLang = (code) => {
+    setLang(code); // 로컬 state 업데이트 → 화면 텍스트 즉시 리렌더링
+  };
 
   const handleStart = () => {
     if (!lang) return;
@@ -21,7 +30,7 @@ const Splash = () => {
     // TODO: 백엔드 API 연동
     // - 실제 서비스에서는 언어 선택값을 서버(환자 프로필)에도 저장해
     //   진료 기록·제출 문서 언어를 이 값 기준으로 고정해야 함
-    localStorage.setItem("naranhi_lang", lang);
+    setCurrentLang(lang);
 
     navigate("/login");
   };
@@ -29,19 +38,20 @@ const Splash = () => {
   return (
     <Wrapper>
       <TopSection>
-        <Label>AFTERCARE COMPANION</Label>
+        <Label>{t("splashLabel")}</Label>
         <Logo>나란히</Logo>
         <Tagline>
-          회복의 모든 날을
+          {t("splashTaglineLine1")}
           <br />
-          나란히
+          {t("splashTaglineLine2")}
         </Tagline>
         <Desc>
-          수술 다음 날부터 4개월 뒤까지,
-          <br />
-          혼자 판단하지 않아도 되도록
-          <br />
-          병원의 회복 프로토콜을 매일 옆에 둡니다.
+          {t("splashDesc").split("\n").map((line, i) => (
+            <React.Fragment key={i}>
+              {line}
+              {i < t("splashDesc").split("\n").length - 1 && <br />}
+            </React.Fragment>
+          ))}
         </Desc>
       </TopSection>
 
@@ -52,14 +62,14 @@ const Splash = () => {
               key={code}
               type="button"
               $active={lang === code}
-              onClick={() => setLang(code)}
+              onClick={() => handleSelectLang(code)}
             >
               {name}
             </LangButton>
           ))}
         </LangRow>
 
-        <Warning>⚠️언어는 최초 한 번만 선택 가능합니다.</Warning>
+        <Warning>{t("splashWarning")}</Warning>
 
         <StartButton
           type="button"
@@ -67,7 +77,7 @@ const Splash = () => {
           $active={!!lang}
           onClick={handleStart}
         >
-          시작하기
+          {t("splashStart")}
         </StartButton>
       </BottomSection>
     </Wrapper>
@@ -177,5 +187,4 @@ const StartButton = styled.button`
   border-radius: 11px;
   cursor: pointer;
   transition: opacity 0.15s ease, background 0.15s ease;
-
 `;

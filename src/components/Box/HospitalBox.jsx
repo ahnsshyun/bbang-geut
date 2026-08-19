@@ -1,9 +1,10 @@
 import styled from "styled-components";
-import COLORS from "../styles/colors";
-import FONTS, { font } from "../styles/fonts";
+import COLORS from "../../styles/colors";
+import FONTS, { font } from "../../styles/fonts";
 import React from "react";
-import { NoticeBox, InfoBox } from "../components/Box";
-import MainButton from "../components/Button";
+import { NoticeBox, InfoBox } from "./Box";
+import MainButton from "../Button";
+import { useLang } from "../../hooks/useLang";
 
 /* ============================================================
    AppointmentList — 예약 목록 (노란색 "예정" 배지만 사용)
@@ -70,14 +71,14 @@ const AppointmentDesc = styled.p`
 const AppointmentBadge = styled.span`
   flex-shrink: 0;
   ${font("boldbody")}
-  color: #8A6300;
-  background: #FFF3CD;
+  color: ${({ $status }) => ($status === "done" ? COLORS.text_green : "#8A6300")};
+  background: ${({ $status }) => ($status === "done" ? "#EAF7EF" : "#FFF3CD")};
   padding: 5px 12px;
   border-radius: 20px;
   white-space: nowrap;
 `;
 
-export function AppointmentCard({ icon, title, dDayLabel, dateLabel, badgeLabel = "예정", onClick }) {
+export function AppointmentCard({ icon, title, dDayLabel, dateLabel, badgeLabel, status, onClick }) {
   return (
     <AppointmentCardEl type="button" onClick={onClick}>
       <AppointmentIconWrap>{icon}</AppointmentIconWrap>
@@ -87,7 +88,7 @@ export function AppointmentCard({ icon, title, dDayLabel, dateLabel, badgeLabel 
           {dDayLabel} · {dateLabel}
         </AppointmentDesc>
       </AppointmentTextGroup>
-      <AppointmentBadge>{badgeLabel}</AppointmentBadge>
+      <AppointmentBadge $status={status}>{badgeLabel}</AppointmentBadge>
     </AppointmentCardEl>
   );
 }
@@ -105,6 +106,7 @@ export function AppointmentList({ items = [] }) {
           dDayLabel={item.dDayLabel}
           dateLabel={item.dateLabel}
           badgeLabel={item.badgeLabel}
+          status={item.status}
           onClick={item.onClick}
         />
       ))}
@@ -360,9 +362,9 @@ const ToggleSwitch = styled.button`
  * - autoTranslate, onToggleAutoTranslate
  * - translateMode: "translated" | "original" — 번역문/원문 중 뭘 보고 있는지 (옵션, 기본 "translated")
  * - onChangeTranslateMode: (mode) => void — 상단 토글(日本語/원문) 클릭 시 호출 (옵션)
- * - translatedLangLabel: 토글의 번역 언어 쪽 버튼 라벨 (기본 "번역")
+ * - translatedLangLabel: 토글의 번역 언어 쪽 버튼 라벨 (옵션)
  * - translateNoticeText: "실시간 번역" 박스 안내문 (옵션)
- * - scopeNoticeText: 하단 안내 문구 (옵션, 기본값은 기존 고정 문구)
+ * - scopeNoticeText: 하단 안내 문구 (옵션)
  */
 export function ChatConsultation({
   doctorName,
@@ -376,10 +378,12 @@ export function ChatConsultation({
   onToggleAutoTranslate,
   translateMode = "translated",
   onChangeTranslateMode,
-  translatedLangLabel = "번역",
-  translateNoticeText = "상담 답변을 번역해서 보고 있어요",
-  scopeNoticeText = "ⓘ 의료진 상담과 회복 관련 안내를 위한 기능입니다. 진단이나 처방을 위해 대면 진료가 필요할 수 있으며, 응급 상황에서는 현지 또는 담당 의료기관에 직접 연락해 주세요.",
+  translatedLangLabel,
+  translateNoticeText,
+  scopeNoticeText,
 }) {
+  const { t } = useLang();
+
   return (
     <ChatWrapper>
       <InfoBox style={{ padding: "14px" }}>
@@ -389,14 +393,14 @@ export function ChatConsultation({
             <ChatDoctorMeta>{doctorMeta}</ChatDoctorMeta>
           </div>
           <ConnectedBadge>
-            <ConnectedDot /> 연결됨
+            <ConnectedDot /> {t("connectedStatus")}
           </ConnectedBadge>
         </HeaderTopRow>
 
         <TranslateNotice>
           <TranslateHeader>
-            <TranslateTitle>실시간 번역</TranslateTitle>
-            <TranslateText>{translateNoticeText}</TranslateText>
+            <TranslateTitle>{t("realtimeTranslate")}</TranslateTitle>
+            <TranslateText>{translateNoticeText ?? t("defaultTranslateNotice")}</TranslateText>
           </TranslateHeader>
           <LangToggle>
             <LangToggleBtn
@@ -404,14 +408,14 @@ export function ChatConsultation({
               $active={translateMode === "translated"}
               onClick={() => onChangeTranslateMode?.("translated")}
             >
-              {translatedLangLabel}
+              {translatedLangLabel ?? t("translatedLabel")}
             </LangToggleBtn>
             <LangToggleBtn
               type="button"
               $active={translateMode === "original"}
               onClick={() => onChangeTranslateMode?.("original")}
             >
-              원문
+              {t("originalLabel")}
             </LangToggleBtn>
           </LangToggle>
         </TranslateNotice>
@@ -437,10 +441,10 @@ export function ChatConsultation({
 
       {attachments.length > 0 && (
         <InfoBox style={{ padding: "12px", background: `${COLORS.info}4D` }}>
-          <AttachTitle>📄 함께 전송될 자료</AttachTitle>
+          <AttachTitle>{t("attachedFilesTitle")}</AttachTitle>
           {attachments.map((a) => (
             <AttachRow key={a.key}>
-              <AttachLabel>{a.label}</AttachLabel>
+              <AttachLabel>🟢 {a.label}</AttachLabel>
             </AttachRow>
           ))}
         </InfoBox>
@@ -448,19 +452,19 @@ export function ChatConsultation({
 
       <ChatInputWrap>
         <ChatTextarea
-          placeholder="무엇이 궁금하신가요?"
+          placeholder={t("chatPlaceholder")}
           value={inputValue}
           onChange={(e) => onInputChange(e.target.value)}
         />
         <ChatInputFooter>
           <ToggleSwitch type="button" $on={autoTranslate} onClick={onToggleAutoTranslate} />
-          <AutoTranslateText>한국어로 자동 번역해 보내기</AutoTranslateText>
+          <AutoTranslateText>{t("autoTranslateToKorean")}</AutoTranslateText>
         </ChatInputFooter>
       </ChatInputWrap>
 
-      <MainButton onClick={onSend}>전송</MainButton>
+      <MainButton onClick={onSend}>{t("sendButton")}</MainButton>
 
-      <NoticeBox>{scopeNoticeText}</NoticeBox>
+      <NoticeBox>{scopeNoticeText ?? t("defaultScopeNotice")}</NoticeBox>
     </ChatWrapper>
   );
 }

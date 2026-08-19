@@ -32,6 +32,7 @@ export function useCheckin() {
               day: home.day,
               date: home.date,
               symptomTerms: FALLBACK_SYMPTOM_TERMS,
+              completed: home.checkin.completed ?? false,
             });
           }
           return;
@@ -44,6 +45,7 @@ export function useCheckin() {
             day: created.day,
             date: created.date,
             symptomTerms: created.symptom_terms,
+            completed: false,
           });
         }
       } catch (err) {

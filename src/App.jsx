@@ -60,6 +60,7 @@ function App() {
 
           <Route path="/history" element={<History />} />
           <Route path="/history/submission" element={<HistorySubmission />} />
+          <Route path="/history/submission/:reportId" element={<HistorySubmission />} />
           <Route path="/home-country" element={<HomeCountry />} />
 
           <Route path="/hospital" element={<Hospital />} />

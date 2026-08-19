@@ -5,14 +5,25 @@ import { useNavigate } from "react-router-dom";
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import Layout, { Content, Spacer } from "../components/Layout";
-import LoginTheme from "../components/LoginTheme";
-import { NoticeBox, InfoBox, InfoRow } from "../components/Box";
+import LoginTheme from "../components/Theme/LoginTheme";
+import { NoticeBox, InfoBox, InfoRow } from "../components/Box/Box";
 import Button from "../components/Button";
+import { useLang } from "../hooks/useLang";
 
 import { getSurgeryInfo } from "../api/onboarding";
+import { getStoredPatient } from "../api/auth";
+
+const ROW_LABEL_KEY = {
+  procedure_type: "rowProcedureType",
+  detail: "rowDetail",
+  clinic: "rowClinic",
+  patient: "rowPatient",
+  surgery_date: "rowSurgeryDate",
+};
 
 const OnboardingCheck = () => {
   const navigate = useNavigate();
+  const { t } = useLang();
   const [surgery, setSurgery] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -23,7 +34,10 @@ const OnboardingCheck = () => {
   useEffect(() => {
     let cancelled = false;
 
-    getSurgeryInfo()
+    const patient = getStoredPatient();
+    const lang = patient?.lang || "ko";
+
+    getSurgeryInfo({ lang })
       .then((data) => {
         if (!cancelled) setSurgery(data);
       })
@@ -48,8 +62,8 @@ const OnboardingCheck = () => {
       <Layout>
         <Content>
           <LoginTheme
-            step="STEP 2/3 · 시술 확인"
-            title="시술 정보를 불러오고 있어요"
+            step={t("step2")}
+            title={t("loadingSurgeryInfo")}
           />
         </Content>
       </Layout>
@@ -61,13 +75,13 @@ const OnboardingCheck = () => {
       <Layout>
         <Content>
           <LoginTheme
-            step="STEP 2/3 · 시술 확인"
-            title="시술 정보를 불러오지 못했어요"
-            desc="네트워크 상태를 확인하고 다시 시도해 주세요"
+            step={t("step2")}
+            title={t("surgeryInfoLoadFail")}
+            desc={t("checkNetwork")}
           />
           <Spacer />
           <Button type="button" onClick={() => window.location.reload()}>
-            다시 시도
+            {t("retry")}
           </Button>
         </Content>
       </Layout>
@@ -78,28 +92,28 @@ const OnboardingCheck = () => {
     <Layout>
       <Content>
         <LoginTheme
-          step="STEP 2/3 · 시술 확인"
-          title="시술 정보를 확인해 주세요"
-          desc="D+120 회복 루틴의 기준이 돼요"
+          step={t("step2")}
+          title={t("confirmSurgeryTitle")}
+          desc={t("confirmSurgeryDesc")}
         />
 
         <InfoBox>
           {surgery.rows.map((row) => (
-            <InfoRow key={row.label}>
-              <RowLabel>{row.label}</RowLabel>
+            <InfoRow key={row.key}>
+              <RowLabel>{t(ROW_LABEL_KEY[row.key]) ?? row.key}</RowLabel>
               <RowValue>{row.value}</RowValue>
             </InfoRow>
           ))}
         </InfoBox>
 
-        <NoticeSpacing>
-          <NoticeBox>ⓘ {surgery.notice}</NoticeBox>
-        </NoticeSpacing>
+        <Spacer />
 
+        <NoticeBox>ⓘ {t("surgeryInfoNotice")}</NoticeBox>
+        
         <Spacer />
 
         <Button type="button" onClick={handleConfirm}>
-          맞아요
+          {t("confirmYes")}
         </Button>
       </Content>
     </Layout>
@@ -126,6 +140,3 @@ const RowValue = styled.span`
   line-height: 1.5;
 `;
 
-const NoticeSpacing = styled.div`
-  margin-top: 20px;
-`;

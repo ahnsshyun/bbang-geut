@@ -2,22 +2,16 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 
-import CheckinTheme from "../components/CheckinTheme";
+import CheckinTheme from "../components/Theme/CheckinTheme";
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import Layout, { Content, Spacer } from "../components/Layout";
-import { NoticeBox, InfoBox, ErrorBox } from "../components/Box";
+import { NoticeBox, InfoBox, ErrorBox } from "../components/Box/Box";
 import MainButton from "../components/Button";
+import { useLang } from "../hooks/useLang";
 
 import { useCheckin } from "../hooks/useCheckin";
 import { putCheckinSymptoms, completeCheckin } from "../api/checkins";
-
-// symptom_terms key → 화면 표시 라벨. 목록에 없는 새 term이 오면 key를 그대로 보여줌(안 깨지게).
-const SYMPTOM_LABELS = {
-  swelling: "부기",
-  pain: "통증",
-  bruise: "멍",
-};
 
 const LEVELS = [1, 2, 3, 4, 5];
 
@@ -28,6 +22,13 @@ function formatDotDate(isoDate) {
 const CheckinStatus = () => {
   const navigate = useNavigate();
   const { checkin, loading, error } = useCheckin();
+  const { t } = useLang();
+
+  const SYMPTOM_LABELS = {
+    swelling: t("symptomSwelling"),
+    pain: t("symptomPain"),
+    bruise: t("symptomBruise"),
+  };
 
   const [levels, setLevels] = useState({});
   const [isSaving, setIsSaving] = useState(false);
@@ -60,7 +61,6 @@ const CheckinStatus = () => {
       await putCheckinSymptoms({ checkinId: checkin.checkinId, symptoms: levels });
       const result = await completeCheckin({ checkinId: checkin.checkinId });
 
-      // TODO: 전역 상태/서버 세션이 없어 다음 화면(완료)으로 값 전달용으로 localStorage 사용
       localStorage.setItem(
         "naranhi_checkin_result",
         JSON.stringify({ ...result, date: checkin.date })
@@ -68,10 +68,7 @@ const CheckinStatus = () => {
 
       navigate("/checkin/complete");
     } catch (err) {
-      setSaveError(
-        err.response?.data?.error?.message ||
-          "저장 중 문제가 발생했어요. 사진 3컷이 모두 등록됐는지 확인해 주세요."
-      );
+      setSaveError(err.response?.data?.error?.message || t("saveInProgressError"));
     } finally {
       setIsSaving(false);
     }
@@ -81,7 +78,7 @@ const CheckinStatus = () => {
     return (
       <Layout>
         <Content>
-          <p>체크인 정보를 불러오고 있어요...</p>
+          <p>{t("loadingCheckin")}</p>
         </Content>
       </Layout>
     );
@@ -91,7 +88,7 @@ const CheckinStatus = () => {
     return (
       <Layout>
         <Content>
-          <ErrorBox>체크인을 불러오지 못했어요. 네트워크 상태를 확인해 주세요.</ErrorBox>
+          <ErrorBox>{t("loadingCheckinError")}</ErrorBox>
         </Content>
       </Layout>
     );
@@ -101,21 +98,21 @@ const CheckinStatus = () => {
     <Layout>
       <Content>
         <CheckinTheme
-          title={`D+${checkin.day} 체크인`}
+          title={`D+${checkin.day} ${t("checkinTitle")}`}
           date={formatDotDate(checkin.date)}
           onClose={() => navigate("/home")}
           totalSteps={3}
           currentStep={2}
         />
 
-        <SectionTitle>오늘의 상태 기록</SectionTitle>
+        <SectionTitle>{t("todayStatusRecord")}</SectionTitle>
 
         <InfoBox style={{ padding: "20px", gap: "20px", display: "flex", flexDirection: "column" }}>
           {statusItems.map((item) => (
             <StatusRow key={item.key}>
               <StatusRowHeader>
                 <StatusLabel>{item.label}</StatusLabel>
-                {levels[item.key] === 0 && <StatusHint>빈칸을 눌러주세요</StatusHint>}
+                {levels[item.key] === 0 && <StatusHint>{t("pleaseSelect")}</StatusHint>}
               </StatusRowHeader>
               <LevelTrack>
                 {LEVELS.map((level) => (
@@ -125,7 +122,7 @@ const CheckinStatus = () => {
                     $level={level}
                     $selected={levels[item.key] >= level}
                     onClick={() => handleSelect(item.key, level)}
-                    aria-label={`${item.label} ${level}단계`}
+                    aria-label={`${item.label} ${level}${t("level")}`}
                   />
                 ))}
               </LevelTrack>
@@ -139,16 +136,16 @@ const CheckinStatus = () => {
           <ErrorBox>{saveError}</ErrorBox>
         ) : (
           <NoticeBox>
-            수치나 정상/이상 판정은 표시하지 않습니다.
+            {t("statusNoticeLine1")}
             <br />
-            변화의 흐름만 남깁니다.
+            {t("statusNoticeLine2")}
           </NoticeBox>
         )}
 
         <Spacer />
 
         <MainButton disabled={!allSelected || isSaving} onClick={handleSave}>
-          {isSaving ? "저장 중..." : "저장하기"}
+          {isSaving ? t("saving") : t("save")}
         </MainButton>
       </Content>
     </Layout>

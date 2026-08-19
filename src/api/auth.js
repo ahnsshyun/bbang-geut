@@ -1,4 +1,5 @@
 import apiClient from "./client";
+import { getCurrentLang } from "../hooks/useLang";
 
 /**
  * POST /api/v1/auth/login
@@ -24,7 +25,7 @@ export async function loginPatient({ patientCode, dob, lang }) {
     // 확인 완료: 명세서 표는 int라고 되어 있었지만, 실제로는 문자열이어야 정상 동작함
     // (2026-08-XX 테스트로 확인). 명세서 표 오타로 보임 — 필요하면 백엔드에 문서 정정 요청.
     dob,
-    lang,
+    lang: lang ?? getCurrentLang(),
   });
   return data;
 }
@@ -36,6 +37,8 @@ export function saveAuthSession(data) {
   localStorage.setItem("naranhi_patient", JSON.stringify(data.patient));
   localStorage.setItem("naranhi_surgery_id", String(data.surgery_id));
   localStorage.setItem("naranhi_care_status", data.care_status);
+  localStorage.removeItem("naranhi_me");
+
 }
 
 /** 로그아웃 등에서 사용할 세션 초기화 */

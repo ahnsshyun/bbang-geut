@@ -4,11 +4,13 @@ import { useNavigate } from "react-router-dom";
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import Layout, { Content, Spacer } from "../components/Layout";
-import LoginTheme from "../components/LoginTheme";
-import { PromptBox, NoticeBox } from "../components/Box";
+import LoginTheme from "../components/Theme/LoginTheme";
+import { PromptBox, NoticeBox } from "../components/Box/Box";
 import Button from "../components/Button";
+import { useLang } from "../hooks/useLang";
 
 import { getSurgeryInfo } from "../api/onboarding";
+import { getStoredPatient } from "../api/auth";
 
 const SERVICE_NAME = "나란히";
 
@@ -31,11 +33,11 @@ function formatDot(dateLike) {
 
 const OnboardingComplete = () => {
   const navigate = useNavigate();
+  const { t } = useLang();
   const [procedureLabel, setProcedureLabel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // /onboarding/complete 응답(POST 결과) — OnboardingPersonal에서 저장해둔 값
   const result = readJSON("naranhi_onboarding_result");
 
   useEffect(() => {
@@ -43,10 +45,13 @@ const OnboardingComplete = () => {
 
     // TODO: 라벨 텍스트("시술")로 찾는 임시 방식. /onboarding/complete 응답에
     // procedure 같은 필드가 직접 오면 이 호출은 제거 가능.
-    getSurgeryInfo()
+    const patient = getStoredPatient();
+    const lang = patient?.lang || "ko";
+
+    getSurgeryInfo({ lang })
       .then((data) => {
         if (cancelled) return;
-        const procedureRow = data.rows.find((r) => r.label === "시술");
+        const procedureRow = data.rows.find((r) => r.key === "procedure_type");
         setProcedureLabel(procedureRow ? procedureRow.value : null);
       })
       .catch((err) => {
@@ -65,18 +70,17 @@ const OnboardingComplete = () => {
     navigate("/home");
   };
 
-  // 온보딩 완료 API를 안 거치고 이 화면에 바로 들어온 경우(새로고침, 직접 접근 등)
   if (!result) {
     return (
       <Layout>
         <Content>
           <LoginTheme
-            title="케어 루틴 정보를 찾을 수 없어요"
-            desc="이전 단계부터 다시 진행해 주세요"
+            title={t("routineNotFound")}
+            desc={t("retryFromStart")}
           />
           <Spacer />
           <Button type="button" onClick={() => navigate("/onboarding/personal")}>
-            이전 단계로
+            {t("prevStep")}
           </Button>
         </Content>
       </Layout>
@@ -87,7 +91,7 @@ const OnboardingComplete = () => {
     return (
       <Layout>
         <Content>
-          <LoginTheme title="정보를 불러오고 있어요" />
+          <LoginTheme title={t("loadingInfo")} />
         </Content>
       </Layout>
     );
@@ -98,15 +102,15 @@ const OnboardingComplete = () => {
   // TODO: medication_period가 null로 오는 케이스가 있음(예시 응답 기준) —
   // 처방 미등록 상태였을 때로 추정되나 백엔드와 조건 확인 필요.
   const SUMMARY_ROWS = [
-    { label: "자가 케어 루틴", value: `${summary.routine_count}종` },
-    { label: "가능 / 주의 / 금지 항목", value: `${summary.rule_count}개` },
-    { label: "금기 해제", value: `${summary.unlock_event_count}건` },
-    { label: "내원 예약", value: `${summary.visit_count}건` },
+    { label: t("summaryRoutineCount"), value: `${summary.routine_count}${t("summaryUnit")}` },
+    { label: t("summaryRuleCount"), value: `${summary.rule_count}${t("summaryCountUnit")}` },
+    { label: t("summaryUnlockEvent"), value: `${summary.unlock_event_count}${t("summaryCaseUnit")}` },
+    { label: t("summaryVisitCount"), value: `${summary.visit_count}${t("summaryCaseUnit")}` },
     {
-      label: "처방약 복약 기간",
-      value: summary.medication_period !== null ? `${summary.medication_period}일` : "-",
+      label: t("summaryMedicationPeriod"),
+      value: summary.medication_period !== null ? `${summary.medication_period}${t("summaryDayUnit")}` : "-",
     },
-    { label: "귀국일", value: formatDot(summary.return_date) },
+    { label: t("summaryReturnDate"), value: formatDot(summary.return_date) },
   ];
 
   return (
@@ -115,12 +119,12 @@ const OnboardingComplete = () => {
         <LoginTheme
           title={
             <>
-              120일간의 케어 루틴이
+              {t("completeTitleLine1")}
               <br />
-              만들어졌어요
+              {t("completeTitleLine2")}
             </>
           }
-          desc={`${SERVICE_NAME}의 회복 프로토콜에, 개인 변수를 적용했어요`}
+          desc={`${SERVICE_NAME}${t("completeDesc")}`}
         />
 
         <PromptBox title={procedureLabel ?? ""}>
@@ -134,12 +138,12 @@ const OnboardingComplete = () => {
 
         <Spacer />
         <NoticeBox>
-          애프터 케어 루틴은 각 항목에 병원 안내문 원문을 제공합니다.
+          {t("afterCareNotice")}
         </NoticeBox>
 
         <Spacer />
         <Button type="button" onClick={handleStart}>
-          {SERVICE_NAME} 회복 루틴 시작하기
+          {SERVICE_NAME} {t("startRoutine")}
         </Button>
       </Content>
     </Layout>

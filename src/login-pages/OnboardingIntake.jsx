@@ -5,16 +5,22 @@ import { useNavigate } from "react-router-dom";
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import Layout, { Content, Spacer } from "../components/Layout";
-import LoginTheme from "../components/LoginTheme";
-import { NoticeBox, PromptBox, PromptDesc, InfoBox, InfoRow } from "../components/Box";
+import LoginTheme from "../components/Theme/LoginTheme";
+import { NoticeBox, PromptBox, PromptDesc, InfoBox, InfoRow } from "../components/Box/Box";
 import Button from "../components/Button";
+import { useLang } from "../hooks/useLang";
 
 import { useMe } from "../hooks/useMe";
 import { useOnboardingStatus } from "../hooks/useOnboardingStatus";
 
 const SERVICE_NAME = "나란히";
 
-// 문서 key별 아이콘 매핑. API가 새 문서 종류를 추가해도 깨지지 않도록 기본값(📄) 둠.
+const DOCUMENT_LABEL_KEY = {
+  surgery_record: "docSurgeryRecord",
+  instructions: "docInstructions",
+  appointments: "docAppointments",
+};
+
 const DOCUMENT_ICONS = {
   surgery_record: "🧾",
   instructions: "📄",
@@ -23,6 +29,7 @@ const DOCUMENT_ICONS = {
 
 const OnboardingIntake = () => {
   const navigate = useNavigate();
+  const { t } = useLang();
   const { me, loading: meLoading, error: meError } = useMe();
   const { status, loading: statusLoading, error: statusError } = useOnboardingStatus();
 
@@ -35,7 +42,7 @@ const OnboardingIntake = () => {
     return (
       <Layout>
         <Content>
-          <LoginTheme step="STEP 1/3 · 자료 수신" title="자료를 불러오고 있어요" />
+          <LoginTheme step={t("step1")} title={t("loadingData")} />
         </Content>
       </Layout>
     );
@@ -46,13 +53,13 @@ const OnboardingIntake = () => {
       <Layout>
         <Content>
           <LoginTheme
-            step="STEP 1/3 · 자료 수신"
-            title="자료를 불러오지 못했어요"
-            desc="네트워크 상태를 확인하고 다시 시도해 주세요"
+            step={t("step1")}
+            title={t("loadDataFail")}
+            desc={t("checkNetwork")}
           />
           <Spacer />
           <Button type="button" onClick={() => window.location.reload()}>
-            다시 시도
+            {t("retry")}
           </Button>
         </Content>
       </Layout>
@@ -70,15 +77,15 @@ const OnboardingIntake = () => {
     <Layout>
       <Content>
         <LoginTheme
-          step="STEP 1/3 · 자료 수신"
+          step={t("step1")}
           title={
             <>
-              {hospitalName}에서
+              {hospitalName}{t("receivedFrom1")}
               <br />
-              회복 자료를 받았습니다.
+              {t("receivedFrom2")}
             </>
           }
-          desc="정보는 기기 안에만 보관되며, 병원에만 전송됩니다."
+          desc={t("dataStorageNotice")}
         />
 
         <InfoBox>
@@ -86,12 +93,12 @@ const OnboardingIntake = () => {
             <InfoRow key={doc.key} style={{ justifyContent: "space-between" }}>
               <RowLeft>
                 <Icon>{DOCUMENT_ICONS[doc.key] ?? "📄"}</Icon>
-                <RowLabel>{doc.label}</RowLabel>
+                <RowLabel>{t(DOCUMENT_LABEL_KEY[doc.key]) ?? doc.key}</RowLabel>
               </RowLeft>
               {doc.received ? (
-                <StatusReceived>받음</StatusReceived>
+                <StatusReceived>{t("received")}</StatusReceived>
               ) : (
-                <StatusPending>대기중</StatusPending>
+                <StatusPending>{t("pending")}</StatusPending>
               )}
             </InfoRow>
           ))}
@@ -99,17 +106,12 @@ const OnboardingIntake = () => {
           <InfoRow style={{ justifyContent: "space-between" }}>
             <RowLeft>
               <Icon>➕</Icon>
-              <RowTextGroup>
-                <RowLabel>환자보관용 처방전</RowLabel>
-                {prescription.registered && prescription.summary && (
-                  <RowSubLabelSuccess>{prescription.summary}</RowSubLabelSuccess>
-                )}
-              </RowTextGroup>
+              <RowLabel>{t("patientPrescription")}</RowLabel>
             </RowLeft>
             {prescription.registered ? (
-              <StatusReceived>등록됨</StatusReceived>
+              <StatusReceived>{t("registered")}</StatusReceived>
             ) : (
-              <StatusAction>직접 등록</StatusAction>
+              <StatusAction>{t("registerDirect")}</StatusAction>
             )}
           </InfoRow>
         </InfoBox>
@@ -117,13 +119,12 @@ const OnboardingIntake = () => {
         <Spacer />
 
         {!prescription.registered && (
-          <PromptBox title="처방전을 직접 등록해주세요">
+          <PromptBox title={t("registerPrescriptionTitle")}>
             <PromptDesc>
-              처방전을 촬영하면{" "}<b>약물명 · 1회 투여량 · 1일 투여 횟수 · 복용 기간</b>을 읽어
-              복약 가이드로 만들어 드려요.
+              {t("registerPrescriptionDescPrefix")}{" "}<b>{t("registerPrescriptionDescBold")}</b>{t("registerPrescriptionDescSuffix")}
             </PromptDesc>
             <Button type="button" onClick={handleCapturePrescription}>
-              📷 처방전 촬영하기
+              {t("capturePrescription")}
             </Button>
           </PromptBox>
         )}
@@ -134,7 +135,7 @@ const OnboardingIntake = () => {
             팀원과 상의해서 디자인에 맞는 위치/문구로 다시 다듬으면 좋을 것 같아요. */}
         {prescription.registered && (
           <Button type="button" onClick={() => navigate("/onboarding/check")}>
-            다음 단계로
+            {t("nextStep")}
           </Button>
         )}
 
@@ -166,12 +167,6 @@ const RowLabel = styled.span`
   ${font("boldbody")}
   font-size: 14px;
   color: #111111;
-`;
-
-const RowSubLabelSuccess = styled.span`
-  ${font("regbody")}
-  font-size: 11px;
-  color: ${COLORS.text_green};
 `;
 
 const StatusReceived = styled.span`

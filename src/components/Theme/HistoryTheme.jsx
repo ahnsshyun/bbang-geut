@@ -1,13 +1,9 @@
 import styled from "styled-components";
 import { useNavigate, useLocation } from "react-router-dom";
-import COLORS from "../styles/colors";
-import FONTS, { font } from "../styles/fonts";
-import plane from "../assets/plane.svg";
-
-const TABS = [
-  { key: "checkin", label: "체크인 기록", path: "/history" },
-  { key: "submission", label: "제출용 기록", path: "/history/submission" },
-];
+import COLORS from "../../styles/colors";
+import FONTS, { font } from "../../styles/fonts";
+import plane from "../../assets/plane.svg";
+import { useLang } from "../../hooks/useLang";
 
 /**
  * props:
@@ -19,22 +15,28 @@ const TABS = [
 const HistoryTheme = ({ returnDDay, dateLabel, children }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLang();
+
+  const TABS = [
+    { key: "checkin", label: t("tabCheckin"), path: "/history" },
+    { key: "submission", label: t("tabSubmission"), path: "/history/submission" },
+  ];
 
   const isToday = returnDDay <= 0;
-  const bannerTitle = isToday ? "오늘 귀국합니다" : `귀국까지 D-${returnDDay}`;
+  const bannerTitle = isToday ? t("returnToday") : `${t("returnDday")}${returnDDay}`;
 
   return (
     <Wrapper>
       <Banner>
         <BannerTitleRow>
           <BannerTitle>{bannerTitle}</BannerTitle>
-          <PlaneIcon src={plane} alt="비행기" />
+          <PlaneIcon src={plane} alt={t("planeAlt")} />
         </BannerTitleRow>
 
         <PrepareButton 
         type="button" onClick={() => navigate("/home-country")}
         $active={location.pathname === "/home-country"}>
-          본국 병원에 보여줄 자료 준비하기 →
+          {t("preparePrompt")}
         </PrepareButton>
       </Banner>
 

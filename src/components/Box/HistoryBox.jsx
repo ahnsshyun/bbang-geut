@@ -1,7 +1,8 @@
 import styled from "styled-components";
-import COLORS from "../styles/colors";
-import FONTS, { font } from "../styles/fonts";
+import COLORS from "../../styles/colors";
+import FONTS, { font } from "../../styles/fonts";
 import { InfoBox, InfoRow } from "./Box";
+import { useLang } from "../../hooks/useLang";
 
 /* ============================================================
    PhotoTimelineBox — 사진 타임라인
@@ -32,17 +33,30 @@ const PhotoCard = styled.div`
   width: 80px;
   height: 100px;
   border-radius: 12px;
-  background: ${COLORS.sub};
+  position: relative;
+  overflow: hidden;
+  background: ${({ $hasImage }) => ($hasImage ? "#e0e0e0" : "linear-gradient(180deg, #B8A9F5, #8C6FEC)")};
   display: flex;
   align-items: flex-end;
   padding: 8px;
   box-sizing: border-box;
 `;
 
+const PhotoCardImg = styled.img`
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
 const PhotoCardLabel = styled.span`
   ${font("boldbody")}
   font-size: 12px;
   color: #ffffff;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 `;
 
 
@@ -52,15 +66,17 @@ const PhotoCardLabel = styled.span`
  * - progressPercent: 진행률(0~100), 하단 바 표시용
  */
 export function PhotoTimelineBox({ photos = [], progressPercent = 0 }) {
+  const { t } = useLang();
   return (
     <div>
       <TimelineSectionTitle>
-        <SectionTitleText>사진 타임라인</SectionTitleText>
+        <SectionTitleText>{t("photoTimeline")}</SectionTitleText>
       </TimelineSectionTitle>
 
       <PhotoScrollRow>
         {photos.map((p, i) => (
-          <PhotoCard key={i}>
+          <PhotoCard key={i} $hasImage={!!p.url}>
+            {p.url && <PhotoCardImg src={p.url} alt={p.label} />}
             <PhotoCardLabel>{p.label}</PhotoCardLabel>
           </PhotoCard>
         ))}
@@ -134,10 +150,11 @@ const BarDayLabel = styled.span`
  * - symptoms: [{ key, label, days: [{ label, level }] }]
  */
 export function SymptomFlowBox({ symptoms = [], rangeLabel }) {
+  const { t } = useLang();
   return (
     <div>
       <TimelineSectionTitle>
-        <SectionTitleText>증상 흐름</SectionTitleText>
+        <SectionTitleText>{t("symptomFlow")}</SectionTitleText>
       </TimelineSectionTitle>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -181,73 +198,12 @@ const EmptyStateText = styled.p`
 `;
 
 export function NoCheckinState() {
+  const { t } = useLang();
   return (
     <EmptyStateWrap>
       <span style={{ fontSize: 32 }}>❕</span>
-      <EmptyStateText>체크인 기록이 없습니다</EmptyStateText>
+      <EmptyStateText>{t("noCheckinRecord")}</EmptyStateText>
     </EmptyStateWrap>
-  );
-}
-
-/* ============================================================
-   ConfirmationBox — 의료기관 확인 이력
-============================================================ */
-const ConfirmBoxEl = styled.div`
-  box-sizing: border-box;
-  width: 100%;
-  padding: 15px;
-  border-radius: 16px;
-  background: #EAF7EF;
-  border: 1px solid #CDEBDB;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 10px 0px 10px 0px;
-`;
-
-const ConfirmTitle = styled.p`
-  ${font("boldbody")}
-  font-size: 14px;
-  color: ${COLORS.text_green};
-  margin: 0;
-`;
-
-const ConfirmList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`;
-
-const ConfirmItem = styled.p`
-  ${font("boldbody")}
-  font-size: 13px;
-  color: #2e7200;
-  margin: 0;
-`;
-
-const ConfirmNextText = styled.p`
-  ${font("regbody")}
-  color: ${COLORS.text_gray};
-  margin: 4px 0 0;
-`;
-
-/**
- * props:
- * - title
- * - items: string[]
- * - nextText
- */
-export function ConfirmationBox({ title = "✅ 의료기관 확인 이력", items = [], nextText }) {
-  return (
-    <ConfirmBoxEl>
-      <ConfirmTitle>{title}</ConfirmTitle>
-      <ConfirmList>
-        {items.map((item, i) => (
-          <ConfirmItem key={i}>{item}</ConfirmItem>
-        ))}
-      </ConfirmList>
-      {nextText && <ConfirmNextText>{nextText}</ConfirmNextText>}
-    </ConfirmBoxEl>
   );
 }
 
@@ -291,10 +247,11 @@ const AlertText = styled.p`
  * - title
  * - children: 본문 내용 (b 태그로 강조 가능)
  */
-export function HospitalAlertBox({ title = "🔔 의료기관 전달 안내", children }) {
+export function HospitalAlertBox({ title, children }) {
+  const { t } = useLang();
   return (
     <AlertBoxEl>
-      <AlertTitle>{title}</AlertTitle>
+      <AlertTitle>{title ?? t("hospitalAlertTitle")}</AlertTitle>
       <AlertText>{children}</AlertText>
     </AlertBoxEl>
   );
@@ -318,6 +275,7 @@ const StatCardEl = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-height: 130px;
 `;
 
 const STAT_TONE = {
@@ -347,6 +305,7 @@ const StatValue = styled.span`
   ${font("boldbody")}
   font-size: 18px;
   color: #111111;
+  margin-top: auto;
 `;
 
 /**
@@ -368,7 +327,7 @@ export function StatCardRow({ stats = [] }) {
 }
 
 /* ============================================================
-   SymptomChangeList — 증상 변화 리스트 (↑↓— + new 배지)
+   SymptomChangeList — 증상 변화 리스트 (↑↓— + 배지)
 ============================================================ */
 const SymptomSectionTitle = styled.p`
   ${font("boldbody")}
@@ -395,15 +354,6 @@ const TrendIcon = styled.span`
     $trend === "up" ? COLORS.error : $trend === "down" ? COLORS.text_green : COLORS.text_gray};
 `;
 
-const NewBadge = styled.span`
-  ${font("boldbody")}
-  font-size: 10px;
-  color: ${COLORS.main};
-  background: ${COLORS.background_lightpurple};
-  padding: 3px 8px;
-  border-radius: 10px;
-`;
-
 const SymptomChangeDesc = styled.p`
   ${font("regbody")}
   font-size: 13px;
@@ -416,22 +366,19 @@ const TREND_ICON = { up: "↑", down: "↓", same: "···" };
 
 /**
  * props:
- * - items: [{ key, label, trend: "up"|"down"|"same", isNew, desc }]
+ * - items: [{ key, label, trend: "up"|"down"|"same", desc }]
  */
 export function SymptomChangeList({ items = [] }) {
+  const { t } = useLang();
   return (
     <div>
-      <SymptomSectionTitle>증상 변화</SymptomSectionTitle>
+      <SymptomSectionTitle>{t("symptomChangeTitle")}</SymptomSectionTitle>
       <InfoBox style={{background: `${COLORS.background_lightpurple}4D`, border: "none", boxShadow: "0px 4px rgba(0, 0, 0, 0.04)"}}>
         {items.map((item) => (
           <InfoRow key={item.key} style={{ flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
             <SymptomChangeTitleRow>
               <SymptomChangeName>{item.label}</SymptomChangeName>
-              {item.isNew ? (
-                <NewBadge>new</NewBadge>
-              ) : (
-                <TrendIcon $trend={item.trend}>{TREND_ICON[item.trend]}</TrendIcon>
-              )}
+              <TrendIcon $trend={item.trend}>{TREND_ICON[item.trend]}</TrendIcon>
             </SymptomChangeTitleRow>
             <SymptomChangeDesc>{item.desc}</SymptomChangeDesc>
           </InfoRow>
@@ -472,12 +419,18 @@ const DonutCard = styled.div`
 
 const DonutDay = styled.span`
   ${font("boldbody")}
-  font-size: 18px;
-  color: #111111;
+  font-size: 14px;
+  color: ${COLORS.main};
+  min-height: 36px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 `;
 
 const DonutDate = styled.span`
-  ${font("body")}
+  ${font("boldbody")}
   color: ${COLORS.text_gray};
   margin-bottom: 8px;
 `;
@@ -549,9 +502,10 @@ function DonutChart({ percent, id }) {
  * - days: [{ key, dLabel, dateLabel, percent }]
  */
 export function RoutineDonutRow({ days = [] }) {
+  const { t } = useLang();
   return (
     <div>
-      <DonutSectionTitle>셀프 케어 루틴 이행</DonutSectionTitle>
+      <DonutSectionTitle>{t("routineDonutTitle")}</DonutSectionTitle>
       <DonutGrid>
         {days.map((day) => (
           <DonutCard key={day.key}>
