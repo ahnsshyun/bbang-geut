@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getOnboardingStatus } from "../api/onboarding";
+import { getCurrentLang } from "./useLang";
 
 /**
  * 자료 수신/처방 등록 현황은 사용자 행동(처방 등록 등)에 따라 계속 바뀌는 값이라
@@ -15,7 +16,9 @@ export function useOnboardingStatus() {
     setLoading(true);
     setError(null);
 
-    getOnboardingStatus()
+    const lang = getCurrentLang();
+
+    getOnboardingStatus({ lang })
       .then((data) => {
         if (!cancelled) setStatus(data);
       })

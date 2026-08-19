@@ -1,6 +1,6 @@
 export const history = {
   ko: {
-    tabCheckin: "체크인 기록",
+    tabCheckin: "체크인",
     tabSubmission: "제출용 기록",
     returnToday: "오늘 귀국합니다",
     returnDday: "귀국까지 D-",
@@ -67,7 +67,7 @@ export const history = {
   },
 
   ja: {
-    tabCheckin: "チェックイン記録",
+    tabCheckin: "チェックイン",
     tabSubmission: "提出用記録",
     returnToday: "本日帰国します",
     returnDday: "帰国まで D-",

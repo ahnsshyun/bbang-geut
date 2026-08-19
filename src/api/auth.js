@@ -73,8 +73,10 @@ export function getStoredPatient() {
  *   clinic: object
  * }>}
  */
-export async function getMe() {
-  const { data } = await apiClient.get("/api/v1/me");
+export async function getMe({ lang } = {}) {
+  const { data } = await apiClient.get("/api/v1/me", {
+    params: { lang: lang ?? getCurrentLang() },
+  });
   return data;
 }
 
