@@ -7,16 +7,27 @@ const Layout = ({ children }) => {
 export default Layout;
 
 const Wrapper = styled.div`
-  width: 360px;
-  min-height: 640px;        /* 페이지마다 내용 길이 달라도 높이 고정*/
+  width: 346px;
+  min-height: 640px;
   display: flex;
-  align-items: center;
   flex-direction: column;
-  border-radius: 28px;
-  border: none;
-  background: #ffffff;
-  box-shadow: 0 12px 32px rgba(80, 130, 180, 0.14);
-  padding: 44px 36px 36px;
-  margin: 0 auto;            /* 화면 중앙 정렬 */
+  align-items: center;
+  padding: 64px 14px 63px 14px;  /* 상 64, 우 28, 하 63, 좌 28 */
+  margin: 0 auto;
+  box-sizing: border-box;         /* padding 포함해서 width 346px 고정 */
+`;
 
+// Layout(Wrapper) 안에서 콘텐츠 영역을 잡아주는 보조 컴포넌트.
+export const Content = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  text-align: left;
+`;
+
+export const Spacer = styled.div`
+  flex: 1;
+  min-height: 24px;
 `;

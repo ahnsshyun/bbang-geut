@@ -1,35 +1,35 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Splash from "./pages/Splash";
-import Login from "./pages/Login";
+import Splash from "./login-pages/Splash";
+import Login from "./login-pages/Login";
 
-import OnboardingPersonal from "./pages/OnboardingPersonal";
-import OnboardingComplete from "./pages/OnboardingComplete";
-import OnboardingWelcome from "./pages/OnboardingWelcome";
-import OnboardingIntake from "./pages/OnboardingIntake";
-import PrescriptionCapture from "./pages/PrescriptionCapture";
-import OnboardingCheck from "./pages/OnboardingCheck";
-import OnboardingReturn from "./pages/OnboardingReturn";
-import OnboardingLang from "./pages/OnboardingLang";
+import OnboardingIntake from "./login-pages/OnboardingIntake";
+import PrescriptionCapture from "./login-pages/PrescriptionCapture";
+import PrescriptionResult from "./login-pages/PrescriptionResult";
 
-import Home from "./pages/Home";
-import Checkin from "./pages/Checkin";
-import Guide from "./pages/Guide";
-import Consult from "./pages/Consult";
-import History from "./pages/History";
+import OnboardingCheck from "./login-pages/OnboardingCheck";
+import OnboardingPersonal from "./login-pages/OnboardingPersonal";
+import OnboardingComplete from "./login-pages/OnboardingComplete";
 
-import "./App.css";
-import { ThemeProvider } from "styled-components";
-import { theme, GlobalStyle } from "./styles/theme";
-
-import MainLayout from "./components/MainLayout";
+import Layout from "./components/Layout";
 import ScrollToTop from "./components/ScrollToTop";
+
+import Home from "./home-pages/Home";
+import Schedule from "./home-pages/Schedule";
+import Notification from "./home-pages/Notification";
+
+import CheckinPhoto from "./checkin-pages/CheckinPhoto";
+import CheckinStatus from "./checkin-pages/CheckinStatus";
+import CheckinComplete from "./checkin-pages/CheckinComplete";
+
+import History from "./history-pages/History";
+import HistorySubmission from "./history-pages/HistorySubmission";
+import HomeCountry from "./history-pages/HomeCountry";
+
+import Hospital from "./hospital-pages/Hospital";
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <GlobalStyle />
-
       <BrowserRouter>
         <ScrollToTop />
         <Routes>
@@ -41,26 +41,32 @@ function App() {
               현재 로그인 성공 시 /onboarding/intake로 바로 이동하도록 되어 있어서
               /onboarding/welcome은 라우트만 살아있고 흐름상 연결은 안 돼 있어요.
               필요 없으면 이 줄 지우셔도 됩니다. */}
+          <Route path="/onboarding/intake" element={<OnboardingIntake />} />
+          <Route path="/onboarding/prescription/capture" element={<PrescriptionCapture />} />
+          <Route path="/onboarding/prescription/result" element={<PrescriptionResult />} />
+          
+          <Route path="/onboarding/check" element={<OnboardingCheck />} />
           <Route path="/onboarding/personal" element={<OnboardingPersonal />} />
           <Route path="/onboarding/complete" element={<OnboardingComplete />} />
-          <Route path="/onboarding/welcome" element={<OnboardingWelcome />} />
-          <Route path="/onboarding/intake" element={<OnboardingIntake />} />
-          <Route path="/onboarding/prescription" element={<PrescriptionCapture />} />
-          <Route path="/onboarding/check" element={<OnboardingCheck />} />
-          <Route path="/onboarding/return" element={<OnboardingReturn />} />
-          <Route path="/onboarding/lang" element={<OnboardingLang />} />
 
-          {/* 메인 탭 (하단 네비 등 공통 레이아웃 적용) */}
-          <Route element={<MainLayout />}>
-            <Route path="/home" element={<Home />} />
-            <Route path="/checkin" element={<Checkin />} />
-            <Route path="/guide" element={<Guide />} />
-            <Route path="/consult" element={<Consult />} />
-            <Route path="/history" element={<History />} />
-          </Route>
+          {/* 메인 탭 */}
+          <Route path="/home" element={<Home />} />
+          <Route path="/schedule" element={<Schedule />} />
+          <Route path="/notification" element={<Notification />} />
+          
+          <Route path="/checkin/photo" element={<CheckinPhoto />} />
+          <Route path="/checkin/status" element={<CheckinStatus />} />
+          <Route path="/checkin/complete" element={<CheckinComplete />} />
+
+          <Route path="/history" element={<History />} />
+          <Route path="/history/submission" element={<HistorySubmission />} />
+          <Route path="/history/submission/:reportId" element={<HistorySubmission />} />
+          <Route path="/home-country" element={<HomeCountry />} />
+
+          <Route path="/hospital" element={<Hospital />} />
+
         </Routes>
       </BrowserRouter>
-    </ThemeProvider>
   );
 }
 
