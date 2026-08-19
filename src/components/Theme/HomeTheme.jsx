@@ -1,9 +1,10 @@
 import styled from "styled-components";
-import COLORS from "../styles/colors";
-import FONTS, { font } from "../styles/fonts";
+import COLORS from "../../styles/colors";
+import FONTS, { font } from "../../styles/fonts";
 
-import { HomeIcon, CameraIcon, RecordIcon, HospitalIcon } from "./Icons";
+import { HomeIcon, CameraIcon, RecordIcon, HospitalIcon } from "../Icons";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useLang } from "../../hooks/useLang";
 
 const Wrapper = styled.div`
   min-height: 100vh;
@@ -53,7 +54,7 @@ const AlertButton = styled.button`
   height: 32px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -150,30 +151,33 @@ const TabLabel = styled.span`
   color: ${({ $active }) => ($active ? COLORS.main : "#bbbbbb")};
 `;
 
-const DEFAULT_TABS = [
-  { key: "home", Icon: HomeIcon, label: "홈", path: "/home" },
-  { key: "checkin", Icon: CameraIcon, label: "체크인", path: "/checkin/photo" },
-  { key: "record", Icon: RecordIcon, label: "기록", path: "/history" },
-  { key: "hospital", Icon: HospitalIcon, label: "병원 연결", path: "/hospital" },
-];
-
-
 const HomeTheme = ({ bannerTitle = "나란히", onBellClick, children }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLang();
 
-  const tabs = DEFAULT_TABS.map((tab) => ({
-    ...tab,
-    active: location.pathname === tab.path,
-    onClick: () => navigate(tab.path),
-  }));
+  const DEFAULT_TABS = [
+    { key: "home", Icon: HomeIcon, label: t("tabHome"), path: "/home" },
+    { key: "checkin", Icon: CameraIcon, label: t("tabCheckin"), path: "/checkin/photo" },
+    { key: "record", Icon: RecordIcon, label: t("tabRecord"), path: "/history", matchPaths: ["/history", "/home-country"] },
+    { key: "hospital", Icon: HospitalIcon, label: t("tabHospital"), path: "/hospital" },
+  ];
+
+const tabs = DEFAULT_TABS.map((tab) => ({
+  ...tab,
+  active:
+    tab.key === "history"
+      ? location.pathname.startsWith("/history") || location.pathname === "/home-country"
+      : location.pathname === tab.path,
+  onClick: () => navigate(tab.path),
+}));
 
   return (
     <Wrapper>
       <TopBanner>
         <BannerTitleGroup>
           <BannerTitle>{bannerTitle}</BannerTitle>
-          <BannerText>회복의 모든 날을 나란히</BannerText>
+          <BannerText>{t("bannerSubtitle")}</BannerText>
         </BannerTitleGroup>
         <AlertButton onClick={() => navigate("/notification")} aria-label="알림">
           🔔

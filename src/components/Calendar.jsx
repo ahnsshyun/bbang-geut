@@ -23,6 +23,7 @@ const Calendar = ({
   hospitalVisitDates = [],
   returnDate,
   completeDate,
+  checkinDates = [],
   
 }) => {
   const [viewDate, setViewDate] = useState(selectedDate || markedDate || new Date());
@@ -65,6 +66,7 @@ const Calendar = ({
             const isHospitalVisit = hospitalVisitDates.some((d) => isSameDay(d, date));
             const isReturnDay = isSameDay(date, returnDate);
             const isCompleteDay = isSameDay(date, completeDate);
+            const hasCheckin = checkinDates.some((d) => isSameDay(d, date));
 
             return (
               <DayCell
@@ -78,6 +80,7 @@ const Calendar = ({
                 {marked && <SurgeryDot />}
                 {isReturnDay && <PlaneMark>✈️</PlaneMark>}
                 {isCompleteDay && <CompleteMark>🏆</CompleteMark>}
+                {hasCheckin && <CheckinDot />}
               </DayCell>
             );
           })}
@@ -165,10 +168,11 @@ const SurgeryDot = styled.span`
   bottom: 2px;
   left: 50%;
   transform: translateX(-50%);
-  width: 4px;
-  height: 4px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: ${COLORS.main};
+  border: 2px solid ${COLORS.sub};
 `;
 
 const PlaneMark = styled.span`
@@ -187,4 +191,16 @@ const CompleteMark = styled.span`
   transform: translateX(-50%);
   font-size: 12px;
   line-height: 1;
+`;
+
+const CheckinDot = styled.span`
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: ${COLORS.text_green};
+  border: 2px solid ${COLORS.info};
 `;

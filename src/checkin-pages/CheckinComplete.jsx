@@ -1,52 +1,79 @@
-import React, { useState } from "react";
+import React from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-
-import CheckinTheme from "../components/CheckinTheme";
+import CheckinTheme from "../components/Theme/CheckinTheme";
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import Layout, { Content, Spacer } from "../components/Layout";
-import { InfoBox } from "../components/Box";
+import { InfoBox } from "../components/Box/Box";
 import MainButton, { SubButton } from "../components/Button";
+import { useLang } from "../hooks/useLang";
 
-const TODAY_LABEL = "D+4 체크인";
-const DATE_LABEL = "2026.08.07";
+function readJSON(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function formatDotDate(isoDate) {
+  return isoDate ? isoDate.replaceAll("-", ".") : "";
+}
 
 const CheckinComplete = () => {
   const navigate = useNavigate();
+  const { t } = useLang();
+
+  const result = readJSON("naranhi_checkin_result");
+
+  if (!result) {
+    return (
+      <Layout>
+        <Content>
+          <CheckinTheme title={t("resultNotFound")} date="" onClose={() => navigate("/home")} />
+          <Spacer />
+          <MainButton onClick={() => navigate("/checkin/photo")}>{t("retryCheckin")}</MainButton>
+        </Content>
+      </Layout>
+    );
+  }
+
+  const completionPercent = Math.round((result.completion_rate ?? 0) * 100);
 
   return (
     <Layout>
       <Content>
         <CheckinTheme
-          title={TODAY_LABEL}
-          date={DATE_LABEL}
+          title={`D+${result.day} ${t("checkinTitle")}`}
+          date={formatDotDate(result.date)}
           onClose={() => navigate("/home")}
           totalSteps={3}
           currentStep={3}
         />
 
-        <InfoBox style={{padding: "20px", gap: "20px", display: "flex", flexDirection: "column"}}>
+        <InfoBox style={{ padding: "20px", gap: "20px", display: "flex", flexDirection: "column" }}>
           <IconWrap>
             <IconEmoji>📋</IconEmoji>
           </IconWrap>
 
-          <CompleteTitle>D+4 기록 완료</CompleteTitle>
+          <CompleteTitle>D+{result.day} {t("recordComplete")}</CompleteTitle>
 
           <PurpleBox>
-            <PurpleTitle>92%  ·  지금까지의 루틴 완주율</PurpleTitle>
-            <PurpleDesc>끝까지 완주했을 때 가장 좋은 결과를 만듭니다</PurpleDesc>
+            <PurpleTitle>{completionPercent}%  ·  {t("completionRateLabel")}</PurpleTitle>
+            <PurpleDesc>{t("completionRateDesc")}</PurpleDesc>
           </PurpleBox>
         </InfoBox>
 
         <Spacer />
 
         <MainButton onClick={() => navigate("/history")}>
-          기록 탭에서 변화보기
+          {t("viewChangeInRecord")}
         </MainButton>
 
         <SubButton onClick={() => navigate("/home")}>
-          홈으로
+          {t("goHome")}
         </SubButton>
       </Content>
     </Layout>

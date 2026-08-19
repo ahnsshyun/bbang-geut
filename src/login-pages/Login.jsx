@@ -5,12 +5,14 @@ import { useNavigate } from "react-router-dom";
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import Layout, { Content, Spacer } from "../components/Layout";
-import LoginTheme from "../components/LoginTheme";
-import { NoticeBox, ErrorBox } from "../components/Box";
+import LoginTheme from "../components/Theme/LoginTheme";
+import { NoticeBox, ErrorBox } from "../components/Box/Box";
 import Button from "../components/Button";
+import { useLang } from "../hooks/useLang";
 
-// TODO(백엔드 연동 시 제거): 프로토타입 검증용 목업 계정
-const MOCK_PATIENTS = [{ patientId: "NR-2608-0417", birthDate: "19940512" }];
+import { loginPatient, saveAuthSession } from "../api/auth";
+import { getCurrentLang } from "../hooks/useLang";
+
 
 const PATIENT_ID_REGEX = /^[A-Z]{2}-\d{4}-\d{4}$/;
 const BIRTH_DATE_REGEX = /^\d{8}$/;
@@ -31,16 +33,24 @@ function isValidBirthDate(value) {
   return true;
 }
 
+// 스플래시 화면 언어 선택값(ko/ja/en) → 서버가 받는 lang(ko/ja)으로 변환
+// TODO: 스플래시에 English 옵션이 있는데 서버 명세는 ja/ko만 허용해요.
+// English를 고른 환자는 어떤 값으로 보내야 하는지 백엔드와 확인 필요.
+// 지금은 임시로 en도 ko로 보냅니다.
+function toServerLang(clientLang) {
+  if (clientLang === "ja") return "ja";
+  return "ko";
+}
+
 const Login = () => {
   const navigate = useNavigate();
+  const { t } = useLang();
+  const selectedLang = getCurrentLang();
   const [patientId, setPatientId] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [errors, setErrors] = useState({ patientId: "", birthDate: "" });
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const selectedLang =
-    typeof window !== "undefined" ? localStorage.getItem("naranhi_lang") : null;
 
   const handlePatientIdChange = (e) => {
     const value = e.target.value.toUpperCase();
@@ -59,14 +69,14 @@ const Login = () => {
   const validate = () => {
     const nextErrors = { patientId: "", birthDate: "" };
     if (!patientId.trim()) {
-      nextErrors.patientId = "환자 ID를 입력해 주세요.";
+      nextErrors.patientId = t("patientIdRequired");
     } else if (!PATIENT_ID_REGEX.test(patientId.trim())) {
-      nextErrors.patientId = "12자리 코드를 입력해 주세요.";
+      nextErrors.patientId = t("patientIdInvalid");
     }
     if (!birthDate.trim()) {
-      nextErrors.birthDate = "생년월일을 입력해 주세요.";
+      nextErrors.birthDate = t("birthDateRequired");
     } else if (!isValidBirthDate(birthDate.trim())) {
-      nextErrors.birthDate = "YYYYMMDD 8자리, 여권 기재 생년월일 기준으로 입력해 주세요.";
+      nextErrors.birthDate = t("birthDateInvalid");
     }
     setErrors(nextErrors);
     return !nextErrors.patientId && !nextErrors.birthDate;
@@ -79,17 +89,26 @@ const Login = () => {
 
     setIsSubmitting(true);
     try {
-      // TODO: 백엔드 API 연동 — POST /api/auth/login { patientId, birthDate }
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      const data = await loginPatient({
+        patientCode: patientId.trim(),
+        dob: birthDate.trim(),
+        lang: toServerLang(selectedLang),
+      });
 
-      const matched = MOCK_PATIENTS.find(
-        (p) => p.patientId === patientId.trim() && p.birthDate === birthDate.trim()
-      );
-      if (!matched) {
-        setFormError("환자 ID 또는 생년월일이 일치하지 않습니다.");
-        return;
-      }
+      saveAuthSession(data);
+      localStorage.removeItem("naranhi_selected_lang");
       navigate("/onboarding/intake");
+    } catch (err) {
+      const serverMessage =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        err.response?.data?.error;
+
+      if (err.response?.status === 401 || err.response?.status === 404) {
+        setFormError(serverMessage || t("loginFail401"));
+      } else {
+        setFormError(serverMessage || t("loginFailGeneric"));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -101,17 +120,17 @@ const Login = () => {
         <LoginTheme
           title={
             <>
-              병원에서 받은
+              {t("loginTitleLine1")}
               <br />
-              환자 ID로 시작합니다.
+              {t("loginTitleLine2")}
             </>
           }
-          desc={"수술 안내 시 받은 ID와 생년월일을 입력하면\n병원이 등록해 둔 수술 정보가 기기로 들어옵니다."}
+          desc={t("loginDesc")}
         />
 
         <Form onSubmit={handleSubmit} noValidate>
           <Field>
-            <FieldLabel htmlFor="patientId">환자 ID</FieldLabel>
+            <FieldLabel htmlFor="patientId">{t("patientIdLabel")}</FieldLabel>
             <TextInput
               id="patientId"
               $hasError={!!errors.patientId}
@@ -125,12 +144,12 @@ const Login = () => {
             {errors.patientId ? (
               <FieldHint $error>{errors.patientId}</FieldHint>
             ) : (
-              <FieldHint>안내문에 있는 12자리 코드</FieldHint>
+              <FieldHint>{t("patientIdHint")}</FieldHint>
             )}
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="birthDate">생년월일</FieldLabel>
+            <FieldLabel htmlFor="birthDate">{t("birthDateLabel")}</FieldLabel>
             <TextInput
               id="birthDate"
               $hasError={!!errors.birthDate}
@@ -144,24 +163,23 @@ const Login = () => {
             {errors.birthDate ? (
               <FieldHint $error>{errors.birthDate}</FieldHint>
             ) : (
-              <FieldHint>
-                YYYYMMDD ㆍ여권 기재 생년월일 기준
-              </FieldHint>
+              <FieldHint>{t("birthDateHint")}</FieldHint>
             )}
           </Field>
 
           {formError && <ErrorBox>{formError}</ErrorBox>}
 
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "확인 중..." : "로그인"}
+            {isSubmitting ? t("submitting") : t("loginButton")}
           </Button>
         </Form>
 
         <Spacer />
 
         <NoticeBox>
-          ID를 받지 못했다면 수술 병원에 문의해 주세요. 
-          <br/>병원이 등록한 환자만 이용할 수 있습니다.
+          {t("noticeLine1")}
+          <br />
+          {t("noticeLine2")}
         </NoticeBox>
       </Content>
     </Layout>
@@ -169,7 +187,6 @@ const Login = () => {
 };
 
 export default Login;
-
 
 const Form = styled.form`
   display: flex;

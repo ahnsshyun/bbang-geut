@@ -1,8 +1,9 @@
 import styled from "styled-components";
-import COLORS from "../styles/colors";
-import FONTS, { font } from "../styles/fonts";
+import COLORS from "../../styles/colors";
+import FONTS, { font } from "../../styles/fonts";
 import LoginTheme from "./LoginTheme";
-import { CloseButton } from "./Button";
+import { CloseButton } from "../Button";
+import { useLang } from "../../hooks/useLang";
 
 const HeaderRow = styled.div`
   display: flex;
@@ -32,13 +33,15 @@ const ProgressSegment = styled.div`
  * - currentStep: 현재까지 채워진 단계 수 (1부터 시작, 예: 1이면 1칸만 채워짐)
  */
 const CheckinTheme = ({ title, date, onClose, totalSteps = 1, currentStep = 1 }) => {
+  const { t } = useLang();
+
   return (
     <>
       <HeaderRow>
         <div>
           <LoginTheme step={date} title={title}/>
         </div>
-        <CloseButton type="button" onClick={onClose} aria-label="닫기">
+        <CloseButton type="button" onClick={onClose} aria-label={t("close")}>
           ✕
         </CloseButton>
       </HeaderRow>

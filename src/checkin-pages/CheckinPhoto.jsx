@@ -1,33 +1,46 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-
-import CheckinTheme from "../components/CheckinTheme";
+import CheckinTheme from "../components/Theme/CheckinTheme";
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import Layout, { Content, Spacer } from "../components/Layout";
-import { NoticeBox } from "../components/Box";
+import { NoticeBox, ErrorBox } from "../components/Box/Box";
 import MainButton, { ShutterButton, CloseButton } from "../components/Button";
-
 import faceGuideFront from "../assets/faceGuideFront.svg";
 import faceGuideLeft from "../assets/faceGuideLeft.svg";
 import faceGuideRight from "../assets/faceGuideRight.svg";
+import { useCheckin } from "../hooks/useCheckin";
+import { uploadCheckinPhoto } from "../api/checkins";
+import { useLang } from "../hooks/useLang";
 
-const STEPS = [
-  { key: "front", label: "정면", shortLabel: "정면 컷", guideImage: faceGuideFront },
-  { key: "left", label: "좌측", shortLabel: "좌측 컷", guideImage: faceGuideLeft },
-  { key: "right", label: "우측", shortLabel: "우측 컷", guideImage: faceGuideRight },
-];
-
-const TODAY_LABEL = "D+4 체크인";
-const DATE_LABEL = "2026.08.07";
+function formatDotDate(isoDate) {
+  return isoDate ? isoDate.replaceAll("-", ".") : "";
+}
 
 const CheckinPhoto = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const { checkin, loading, error } = useCheckin();
+  const { t } = useLang();
+
+  const STEPS = [
+    { key: "front", label: t("front"), shortLabel: t("frontShot"), guideImage: faceGuideFront },
+    { key: "left", label: t("left"), shortLabel: t("leftShot"), guideImage: faceGuideLeft },
+    { key: "right", label: t("right"), shortLabel: t("rightShot"), guideImage: faceGuideRight },
+  ];
+
 
   const [stepIndex, setStepIndex] = useState(0);
   const [photos, setPhotos] = useState({ front: null, left: null, right: null });
+  const [uploadError, setUploadError] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    if (checkin?.completed) {
+      navigate("/checkin/complete", { replace: true });
+    }
+  }, [checkin, navigate]);
 
   const currentStep = STEPS[stepIndex];
   const capturedCount = Object.values(photos).filter(Boolean).length;
@@ -35,21 +48,35 @@ const CheckinPhoto = () => {
   const isLastStep = stepIndex === STEPS.length - 1;
 
   const handleShutterClick = () => {
+    if (!checkin || isUploading) return;
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setPhotos((prev) => ({ ...prev, [currentStep.key]: url }));
     e.target.value = "";
+    if (!file || !checkin) return;
+
+    setUploadError("");
+    const previewUrl = URL.createObjectURL(file);
+    setPhotos((prev) => ({ ...prev, [currentStep.key]: previewUrl }));
+
+    setIsUploading(true);
+    try {
+      await uploadCheckinPhoto({ checkinId: checkin.checkinId, angle: currentStep.key, file });
+    } catch (err) {
+      setUploadError(
+        err.response?.data?.error?.message || t("photoUploadFail")
+      );
+      setPhotos((prev) => ({ ...prev, [currentStep.key]: null }));
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleNext = () => {
-    if (!isCurrentCaptured) return;
+    if (!isCurrentCaptured || isUploading) return;
     if (isLastStep) {
-      // TODO: 백엔드 업로드 연동
       navigate("/checkin/status");
       return;
     }
@@ -63,19 +90,39 @@ const CheckinPhoto = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <Layout>
+        <Content>
+          <p>{t("loadingCheckin")}</p>
+        </Content>
+      </Layout>
+    );
+  }
+
+  if (error || !checkin) {
+    return (
+      <Layout>
+        <Content>
+          <ErrorBox>{t("checkinStartError")}</ErrorBox>
+        </Content>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <Content>
         <CheckinTheme
-          title={TODAY_LABEL}
-          date={DATE_LABEL}
+          title={`D+${checkin.day} ${t("checkinTitle")}`}
+          date={formatDotDate(checkin.date)}
           onClose={() => navigate("/home")}
           totalSteps={3}
           currentStep={1}
         />
 
         <RecordRow>
-          <RecordLabel>변화 기록</RecordLabel>
+          <RecordLabel>{t("changeRecord")}</RecordLabel>
           <RecordCount>{capturedCount}/3</RecordCount>
         </RecordRow>
 
@@ -84,7 +131,7 @@ const CheckinPhoto = () => {
             <PreviewImage src={photos[currentStep.key]} alt={currentStep.label} />
           ) : (
             <GuideBox>
-              <GuideSilhouette src={currentStep.guideImage} alt={`${currentStep.label} 가이드`} />
+              <GuideSilhouette src={currentStep.guideImage} alt={`${currentStep.label} ${t("guideAlt")}`} />
             </GuideBox>
           )}
         </CameraFrame>
@@ -109,16 +156,23 @@ const CheckinPhoto = () => {
         </TabRow>
 
         <ShutterArea>
-          
-          <ShutterButton onClick={handleShutterClick} ariaLabel={`${currentStep.label} 촬영`} />
-          
-          <Spacer/>
-          
-          <NoticeBox>
-            반투명 기준 일러스트에 얼굴을 맞춰 주세요
-            <br />
-            매일 같은 각도로 찍을수록 변화가 정확하게 보여요
-          </NoticeBox>
+          <ShutterButton
+            onClick={handleShutterClick}
+            ariaLabel={`${currentStep.label} ${t("shootAction")}`}
+            disabled={isUploading}
+          />
+
+          <Spacer />
+
+          {uploadError ? (
+            <ErrorBox>{uploadError}</ErrorBox>
+          ) : (
+            <NoticeBox>
+              {t("guideText1")}
+              <br />
+              {t("guideText2")}
+            </NoticeBox>
+          )}
         </ShutterArea>
 
         <input
@@ -132,8 +186,8 @@ const CheckinPhoto = () => {
 
         <Spacer />
 
-        <MainButton disabled={!isCurrentCaptured} onClick={handleNext}>
-          {isLastStep ? "완료" : "다음"}
+        <MainButton disabled={!isCurrentCaptured || isUploading} onClick={handleNext}>
+          {isUploading ? t("uploading") : isLastStep ? t("complete") : t("next")}
         </MainButton>
       </Content>
     </Layout>

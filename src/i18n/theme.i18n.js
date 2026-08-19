@@ -1,0 +1,28 @@
+export const theme = {
+  ko: {
+    close: "닫기",
+    next: "다음",
+    save: "저장하기",
+    retry: "다시 시도",
+    loading: "불러오는 중이에요...",
+    loadError: "정보를 불러오지 못했어요. 네트워크 상태를 확인해 주세요.",
+    tabHome: "홈",
+    tabCheckin: "체크인",
+    tabRecord: "기록",
+    tabHospital: "병원 연결",
+    bannerSubtitle: "회복의 모든 날을 나란히",
+  },
+  ja: {
+    close: "閉じる",
+    next: "次へ",
+    save: "保存する",
+    retry: "再試行",
+    loading: "読み込み中です...",
+    loadError: "情報を読み込めませんでした。ネットワーク状態をご確認ください。",
+    tabHome: "ホーム",
+    tabCheckin: "チェックイン",
+    tabRecord: "記録",
+    tabHospital: "病院連携",
+    bannerSubtitle: "回復のすべての日をともに",
+  },
+};

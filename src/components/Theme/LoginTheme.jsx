@@ -1,6 +1,6 @@
 import styled from "styled-components";
-import COLORS from "../styles/colors";
-import FONTS, { font } from "../styles/fonts";
+import COLORS from "../../styles/colors";
+import FONTS, { font } from "../../styles/fonts";
 
 const StepBadge = styled.p`
   ${font("semibody")}

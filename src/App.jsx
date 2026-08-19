@@ -23,6 +23,10 @@ import CheckinStatus from "./checkin-pages/CheckinStatus";
 import CheckinComplete from "./checkin-pages/CheckinComplete";
 
 import History from "./history-pages/History";
+import HistorySubmission from "./history-pages/HistorySubmission";
+import HomeCountry from "./history-pages/HomeCountry";
+
+import Hospital from "./hospital-pages/Hospital";
 
 function App() {
   return (
@@ -55,6 +59,11 @@ function App() {
           <Route path="/checkin/complete" element={<CheckinComplete />} />
 
           <Route path="/history" element={<History />} />
+          <Route path="/history/submission" element={<HistorySubmission />} />
+          <Route path="/history/submission/:reportId" element={<HistorySubmission />} />
+          <Route path="/home-country" element={<HomeCountry />} />
+
+          <Route path="/hospital" element={<Hospital />} />
 
         </Routes>
       </BrowserRouter>
