@@ -1,4 +1,5 @@
 import apiClient from "./client";
+import { getCurrentLang } from "../hooks/useLang";
 
 /**
  * GET /api/v1/onboarding/status
@@ -44,6 +45,7 @@ export async function completeOnboarding({ answers, returnDate }) {
   const { data } = await apiClient.post("/api/v1/onboarding/complete", {
     answers,
     return_date: returnDate,
+    lang: getCurrentLang(),
   });
   return data;
 }
