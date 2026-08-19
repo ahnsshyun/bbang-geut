@@ -132,5 +132,5 @@ const PurpleTitle = styled.p`
 const PurpleDesc = styled.p`
   ${font("boldbody")}
   color: ${COLORS.text_gray};
-  line-height: 8px;
+  line-height: 15px;
 `;
