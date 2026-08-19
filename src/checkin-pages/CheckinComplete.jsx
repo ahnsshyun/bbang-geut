@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+
 import CheckinTheme from "../components/Theme/CheckinTheme";
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
@@ -8,15 +9,7 @@ import Layout, { Content, Spacer } from "../components/Layout";
 import { InfoBox } from "../components/Box/Box";
 import MainButton, { SubButton } from "../components/Button";
 import { useLang } from "../hooks/useLang";
-
-function readJSON(key) {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
+import { useHome } from "../hooks/useHome";
 
 function formatDotDate(isoDate) {
   return isoDate ? isoDate.replaceAll("-", ".") : "";
@@ -25,10 +18,19 @@ function formatDotDate(isoDate) {
 const CheckinComplete = () => {
   const navigate = useNavigate();
   const { t } = useLang();
+  const { home, loading, error } = useHome();
 
-  const result = readJSON("naranhi_checkin_result");
+  if (loading) {
+    return (
+      <Layout>
+        <Content>
+          <p>{t("loading")}</p>
+        </Content>
+      </Layout>
+    );
+  }
 
-  if (!result) {
+  if (error || !home) {
     return (
       <Layout>
         <Content>
@@ -40,14 +42,14 @@ const CheckinComplete = () => {
     );
   }
 
-  const completionPercent = Math.round((result.completion_rate ?? 0) * 100);
+  const completionPercent = Math.round((home.summary?.completion_rate ?? 0) * 100);
 
   return (
     <Layout>
       <Content>
         <CheckinTheme
-          title={`D+${result.day} ${t("checkinTitle")}`}
-          date={formatDotDate(result.date)}
+          title={`D+${home.day} ${t("checkinTitle")}`}
+          date={formatDotDate(home.date)}
           onClose={() => navigate("/home")}
           totalSteps={3}
           currentStep={3}
@@ -58,7 +60,7 @@ const CheckinComplete = () => {
             <IconEmoji>📋</IconEmoji>
           </IconWrap>
 
-          <CompleteTitle>D+{result.day} {t("recordComplete")}</CompleteTitle>
+          <CompleteTitle>D+{home.day} {t("recordComplete")}</CompleteTitle>
 
           <PurpleBox>
             <PurpleTitle>{completionPercent}%  ·  {t("completionRateLabel")}</PurpleTitle>
