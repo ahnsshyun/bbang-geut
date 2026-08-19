@@ -13,7 +13,6 @@ import { useLang } from "../hooks/useLang";
 import { loginPatient, saveAuthSession } from "../api/auth";
 import { getCurrentLang } from "../hooks/useLang";
 
-const selectedLang = getCurrentLang();
 
 const PATIENT_ID_REGEX = /^[A-Z]{2}-\d{4}-\d{4}$/;
 const BIRTH_DATE_REGEX = /^\d{8}$/;
@@ -46,6 +45,7 @@ function toServerLang(clientLang) {
 const Login = () => {
   const navigate = useNavigate();
   const { t } = useLang();
+  const selectedLang = getCurrentLang();
   const [patientId, setPatientId] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [errors, setErrors] = useState({ patientId: "", birthDate: "" });
