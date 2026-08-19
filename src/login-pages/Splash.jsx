@@ -26,12 +26,13 @@ const Splash = () => {
 
   const handleStart = () => {
     if (!lang) return;
+    console.log("1. handleStart 실행됨, 선택된 lang:", lang);
 
     // TODO: 백엔드 API 연동
     // - 실제 서비스에서는 언어 선택값을 서버(환자 프로필)에도 저장해
     //   진료 기록·제출 문서 언어를 이 값 기준으로 고정해야 함
     setCurrentLang(lang);
-
+    console.log("2. 저장 직후 localStorage 값:", localStorage.getItem("naranhi_selected_lang"));
     navigate("/login");
   };
 
