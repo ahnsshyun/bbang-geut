@@ -20,6 +20,5 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// ... 나머지 refresh 토큰 로직은 그대로 유지
 
 export default apiClient;

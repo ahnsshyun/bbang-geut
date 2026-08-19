@@ -22,6 +22,7 @@ const PrescriptionResult = () => {
     const raw = localStorage.getItem("naranhi_prescription_ocr");
     return raw ? JSON.parse(raw) : null;
   });
+  const [photoUrl] = useState(() => localStorage.getItem("naranhi_prescription_photo"));
 
   const regularDrugs = (ocrData?.items ?? []).filter((item) => !item.is_prn);
   const prnDrugs = (ocrData?.items ?? []).filter((item) => item.is_prn);
@@ -103,7 +104,9 @@ const PrescriptionResult = () => {
 />
 
         <PromptBox>
-          <CapturedPhoto />
+          <CapturedPhoto>
+            {photoUrl && <CapturedPhotoImg src={photoUrl} alt="" />}
+          </CapturedPhoto>
           <PromptDesc>{t("retakeNotice")}</PromptDesc>
         </PromptBox>
 
@@ -178,6 +181,14 @@ const CapturedPhoto = styled.div`
   aspect-ratio: 3 / 4;
   border-radius: 12px;
   background: #e0e0e0;
+  overflow: hidden;
+  position: relative;
+`;
+
+const CapturedPhotoImg = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 const SectionHeading = styled.p`

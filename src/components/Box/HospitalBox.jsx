@@ -356,7 +356,7 @@ const ToggleSwitch = styled.button`
 /**
  * props:
  * - doctorName, doctorMeta
- * - messages: [{ key, from: "doctor"|"me", authorLabel, dateLabel, text, translateHint }]
+ * - messages: [{ key, from: "doctor"|"me", authorLabel, dateLabel, text }]
  * - attachments: [{ key, label, onView }]
  * - inputValue, onInputChange, onSend
  * - autoTranslate, onToggleAutoTranslate
@@ -433,7 +433,6 @@ export function ChatConsultation({
             <MessageRow $fromDoctor={msg.from === "doctor"}>
               <MessageMeta>{msg.authorLabel}</MessageMeta>
               <MessageBubble $fromDoctor={msg.from === "doctor"}>{msg.text}</MessageBubble>
-              {msg.translateHint && <TranslateHint>{msg.translateHint}</TranslateHint>}
             </MessageRow>
           </React.Fragment>
         );

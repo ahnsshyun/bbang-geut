@@ -1,18 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-
 import CheckinTheme from "../components/Theme/CheckinTheme";
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import Layout, { Content, Spacer } from "../components/Layout";
 import { NoticeBox, ErrorBox } from "../components/Box/Box";
 import MainButton, { ShutterButton, CloseButton } from "../components/Button";
-
 import faceGuideFront from "../assets/faceGuideFront.svg";
 import faceGuideLeft from "../assets/faceGuideLeft.svg";
 import faceGuideRight from "../assets/faceGuideRight.svg";
-
 import { useCheckin } from "../hooks/useCheckin";
 import { uploadCheckinPhoto } from "../api/checkins";
 import { useLang } from "../hooks/useLang";

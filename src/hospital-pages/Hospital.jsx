@@ -135,7 +135,7 @@ const Hospital = () => {
       authorLabel: isDoctor ? clinic.surgeon : me.patient.name,
       dateLabel: `${formatDotDate(msg.created_at)} · D+${msg.day}`,
       text: showTranslated ? msg.body_translated : msg.body_original,
-      translateHint: msg.tag,
+    
     };
   });
 

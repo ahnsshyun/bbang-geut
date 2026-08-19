@@ -1,18 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import CheckinTheme from "../components/Theme/CheckinTheme";
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import Layout, { Content, Spacer } from "../components/Layout";
-import LoginTheme from "../components/Theme/LoginTheme";
-import { PromptBox, NoticeBox } from "../components/Box/Box";
-import Button from "../components/Button";
+import { InfoBox } from "../components/Box/Box";
+import MainButton, { SubButton } from "../components/Button";
 import { useLang } from "../hooks/useLang";
-
-import { getSurgeryInfo } from "../api/onboarding";
-import { getStoredPatient } from "../api/auth";
-
-const SERVICE_NAME = "나란히";
 
 function readJSON(key) {
   try {
@@ -23,148 +18,117 @@ function readJSON(key) {
   }
 }
 
-function formatDot(dateLike) {
-  const date = new Date(dateLike);
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}.${m}.${d}`;
+function formatDotDate(isoDate) {
+  return isoDate ? isoDate.replaceAll("-", ".") : "";
 }
 
-const OnboardingComplete = () => {
+const CheckinComplete = () => {
   const navigate = useNavigate();
   const { t } = useLang();
-  const [procedureLabel, setProcedureLabel] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  const result = readJSON("naranhi_onboarding_result");
-
-  useEffect(() => {
-    let cancelled = false;
-
-    // TODO: 라벨 텍스트("시술")로 찾는 임시 방식. /onboarding/complete 응답에
-    // procedure 같은 필드가 직접 오면 이 호출은 제거 가능.
-    const patient = getStoredPatient();
-    const lang = patient?.lang || "ko";
-
-    getSurgeryInfo({ lang })
-      .then((data) => {
-        if (cancelled) return;
-        const procedureRow = data.rows.find((r) => r.label === "시술" || r.label === "施術");
-        setProcedureLabel(procedureRow ? procedureRow.value : null);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const handleStart = () => {
-    navigate("/home");
-  };
+  const result = readJSON("naranhi_checkin_result");
 
   if (!result) {
     return (
       <Layout>
         <Content>
-          <LoginTheme
-            title={t("routineNotFound")}
-            desc={t("retryFromStart")}
-          />
+          <CheckinTheme title={t("resultNotFound")} date="" onClose={() => navigate("/home")} />
           <Spacer />
-          <Button type="button" onClick={() => navigate("/onboarding/personal")}>
-            {t("prevStep")}
-          </Button>
+          <MainButton onClick={() => navigate("/checkin/photo")}>{t("retryCheckin")}</MainButton>
         </Content>
       </Layout>
     );
   }
 
-  if (loading) {
-    return (
-      <Layout>
-        <Content>
-          <LoginTheme title={t("loadingInfo")} />
-        </Content>
-      </Layout>
-    );
-  }
-
-  const { summary } = result;
-
-  // TODO: medication_period가 null로 오는 케이스가 있음(예시 응답 기준) —
-  // 처방 미등록 상태였을 때로 추정되나 백엔드와 조건 확인 필요.
-  const SUMMARY_ROWS = [
-    { label: t("summaryRoutineCount"), value: `${summary.routine_count}${t("summaryUnit")}` },
-    { label: t("summaryRuleCount"), value: `${summary.rule_count}${t("summaryCountUnit")}` },
-    { label: t("summaryUnlockEvent"), value: `${summary.unlock_event_count}${t("summaryCaseUnit")}` },
-    { label: t("summaryVisitCount"), value: `${summary.visit_count}${t("summaryCaseUnit")}` },
-    {
-      label: t("summaryMedicationPeriod"),
-      value: summary.medication_period !== null ? `${summary.medication_period}${t("summaryDayUnit")}` : "-",
-    },
-    { label: t("summaryReturnDate"), value: formatDot(summary.return_date) },
-  ];
+  const completionPercent = Math.round((result.completion_rate ?? 0) * 100);
 
   return (
     <Layout>
       <Content>
-        <LoginTheme
-          title={
-            <>
-              {t("completeTitleLine1")}
-              <br />
-              {t("completeTitleLine2")}
-            </>
-          }
-          desc={`${SERVICE_NAME}${t("completeDesc")}`}
+        <CheckinTheme
+          title={`D+${result.day} ${t("checkinTitle")}`}
+          date={formatDotDate(result.date)}
+          onClose={() => navigate("/home")}
+          totalSteps={3}
+          currentStep={3}
         />
 
-        <PromptBox title={procedureLabel ?? ""}>
-          {SUMMARY_ROWS.map((row) => (
-            <SummaryRow key={row.label}>
-              <SummaryLabel>{row.label}</SummaryLabel>
-              <SummaryValue>{row.value}</SummaryValue>
-            </SummaryRow>
-          ))}
-        </PromptBox>
+        <InfoBox style={{ padding: "20px", gap: "20px", display: "flex", flexDirection: "column" }}>
+          <IconWrap>
+            <IconEmoji>📋</IconEmoji>
+          </IconWrap>
+
+          <CompleteTitle>D+{result.day} {t("recordComplete")}</CompleteTitle>
+
+          <PurpleBox>
+            <PurpleTitle>{completionPercent}%  ·  {t("completionRateLabel")}</PurpleTitle>
+            <PurpleDesc>{t("completionRateDesc")}</PurpleDesc>
+          </PurpleBox>
+        </InfoBox>
 
         <Spacer />
-        <NoticeBox>
-          {t("afterCareNotice")}
-        </NoticeBox>
 
-        <Spacer />
-        <Button type="button" onClick={handleStart}>
-          {SERVICE_NAME} {t("startRoutine")}
-        </Button>
+        <MainButton onClick={() => navigate("/history")}>
+          {t("viewChangeInRecord")}
+        </MainButton>
+
+        <SubButton onClick={() => navigate("/home")}>
+          {t("goHome")}
+        </SubButton>
       </Content>
     </Layout>
   );
 };
 
-export default OnboardingComplete;
+export default CheckinComplete;
 
 /* ---------- styles ---------- */
-export const SummaryRow = styled.div`
+
+const IconWrap = styled.div`
+  width: 70px;
+  height: 70px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #FF6FA5, #FF9FC0);
+  box-shadow: 0px 10px 30px 0px rgba(135, 206, 250, 0.6);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  margin: 0 auto;
 `;
 
-export const SummaryLabel = styled.span`
-  ${font("semibody")}
-  color: ${COLORS.text_gray};
+const IconEmoji = styled.span`
+  font-size: 32px;
 `;
 
-export const SummaryValue = styled.span`
-  ${font("semibody")}
+const CompleteTitle = styled.p`
+  ${font("boldbody")}
+  font-size: 18px;
+  color: #111111;
+  text-align: center;
+  margin-top: 20px;
+`;
+
+const PurpleBox = styled.div`
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px;
+  border-radius: 11px;
+  background: ${COLORS.background_lightpurple};
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+`;
+
+const PurpleTitle = styled.p`
+  ${font("boldbody")}
+  font-size: 16px;
   color: ${COLORS.main};
+  line-height: 8px;
+`;
+
+const PurpleDesc = styled.p`
+  ${font("boldbody")}
+  color: ${COLORS.text_gray};
+  line-height: 8px;
 `;

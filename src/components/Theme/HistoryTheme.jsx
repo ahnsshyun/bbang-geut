@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { useNavigate, useLocation } from "react-router-dom";
 import COLORS from "../../styles/colors";
 import FONTS, { font } from "../../styles/fonts";
-import plane from "../../assets/plane.svg";
+import plane from "../../assets/planeIcon.svg";
 import { useLang } from "../../hooks/useLang";
 
 /**

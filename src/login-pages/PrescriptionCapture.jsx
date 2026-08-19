@@ -29,18 +29,23 @@ const PrescriptionCapture = () => {
     e.target.value = "";
     if (!file) return;
 
-    // UI 연출용 미리보기만 생성 — 서버에는 업로드하지 않음
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
 
-    handleCapture();
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      localStorage.setItem("naranhi_prescription_photo", reader.result);
+    };
+    reader.readAsDataURL(file);
+
+    handleCapture(file);
   };
 
-  const handleCapture = async () => {
+  const handleCapture = async (file) => {
     setIsScanning(true);
     setError(null);
     try {
-      const result = await getPrescriptionOcr();
+      const result = await getPrescriptionOcr(file);
       localStorage.setItem("naranhi_prescription_ocr", JSON.stringify(result));
       navigate("/onboarding/prescription/result");
     } catch (err) {

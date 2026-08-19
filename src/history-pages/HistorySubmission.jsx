@@ -12,7 +12,7 @@ import apiClient from "../api/client";
 import { Spacer } from "../components/Layout";
 import { getStoredPatient } from "../api/auth";
 import { getHome } from "../api/home";
-import { useLang } from "../hooks/useLang";
+import { useLang, getCurrentLang } from "../hooks/useLang";
 
 function formatDot(dateStr) {
   const date = new Date(dateStr);
@@ -39,8 +39,7 @@ const HistorySubmission = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const patient = getStoredPatient();
-        const lang = patient?.lang || "ko";
+        const lang = getCurrentLang();
 
         const [reportRes, homeRes] = await Promise.all([
           reportId

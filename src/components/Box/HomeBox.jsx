@@ -190,7 +190,7 @@ const CheckinTitle = styled.p`
 
 const CheckinDesc = styled.p`
   ${font("boldbody")}
-  color: ${({ $done }) => ($done ? "#ffffff" : COLORS.greey)};
+  color: ${({ $done }) => ($done ? COLORS.greey : COLORS.greey)};
   margin: 0;
 `;
 
@@ -627,7 +627,7 @@ const TimelineBadge = styled.span`
  */
 export function TimelineSection({ items = [] }) {
   const { t } = useLang();
-  
+
   return (
     <TimelineWrapper>
       {items.map((item) => (
