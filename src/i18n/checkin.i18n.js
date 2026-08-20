@@ -39,6 +39,7 @@ export const checkin = {
     completionRateDesc: "끝까지 완주했을 때 가장 좋은 결과를 만듭니다",
     viewChangeInRecord: "기록 탭에서 변화보기",
     goHome: "홈으로",
+    useMockPhoto: "샘플 사진 불러오기",
   },
 
   ja: {
@@ -81,5 +82,6 @@ export const checkin = {
     completionRateDesc: "最後まで達成することが最良の結果につながります",
     viewChangeInRecord: "記録タブで変化を見る",
     goHome: "ホームへ",
+    useMockPhoto: "サンプル写真で進める",
   },
 };

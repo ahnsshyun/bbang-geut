@@ -6,13 +6,16 @@ import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import Layout, { Content, Spacer } from "../components/Layout";
 import { NoticeBox, ErrorBox } from "../components/Box/Box";
-import MainButton, { ShutterButton, CloseButton } from "../components/Button";
+import MainButton, { ShutterButton, CloseButton, MockButton } from "../components/Button";
 import faceGuideFront from "../assets/faceGuideFront.svg";
 import faceGuideLeft from "../assets/faceGuideLeft.svg";
 import faceGuideRight from "../assets/faceGuideRight.svg";
 import { useCheckin } from "../hooks/useCheckin";
 import { uploadCheckinPhoto } from "../api/checkins";
 import { useLang } from "../hooks/useLang";
+import mockImageFront from "../assets/mockImageFront.png";
+import mockImageLeft from "../assets/mockImageLeft.png";
+import mockImageRight from "../assets/mockImageRight.png";
 
 function formatDotDate(isoDate) {
   return isoDate ? isoDate.replaceAll("-", ".") : "";
@@ -30,6 +33,11 @@ const CheckinPhoto = () => {
     { key: "right", label: t("right"), shortLabel: t("rightShot"), guideImage: faceGuideLeft },
   ];
 
+  const MOCK_IMAGES = {
+    front: mockImageFront,
+    left: mockImageLeft,
+    right: mockImageRight,
+  };
 
   const [stepIndex, setStepIndex] = useState(0);
   const [photos, setPhotos] = useState({ front: null, left: null, right: null });
@@ -63,6 +71,27 @@ const CheckinPhoto = () => {
       setUploadError(
         err.response?.data?.error?.message || t("photoUploadFail")
       );
+      setPhotos((prev) => ({ ...prev, [currentStep.key]: null }));
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleUseMockPhoto = async () => {
+    if (!checkin || isUploading) return;
+
+    const mockUrl = MOCK_IMAGES[currentStep.key];
+    setUploadError("");
+    setPhotos((prev) => ({ ...prev, [currentStep.key]: mockUrl }));
+
+    setIsUploading(true);
+    try {
+      const res = await fetch(mockUrl);
+      const blob = await res.blob();
+      const file = new File([blob], `mock-${currentStep.key}.jpg`, { type: blob.type });
+      await uploadCheckinPhoto({ checkinId: checkin.checkinId, angle: currentStep.key, file });
+    } catch (err) {
+      setUploadError(err.response?.data?.error?.message || t("photoUploadFail"));
       setPhotos((prev) => ({ ...prev, [currentStep.key]: null }));
     } finally {
       setIsUploading(false);
@@ -156,6 +185,10 @@ const CheckinPhoto = () => {
             ariaLabel={`${currentStep.label} ${t("shootAction")}`}
             disabled={isUploading}
           />
+
+        <MockButton type="button" onClick={handleUseMockPhoto} disabled={isUploading}>
+          {t("useMockPhoto")}
+        </MockButton>
 
         <MainButton disabled={!isCurrentCaptured || isUploading} onClick={handleNext}>
           {isUploading ? t("uploading") : isLastStep ? t("complete") : t("next")}

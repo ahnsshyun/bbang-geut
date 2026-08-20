@@ -79,6 +79,31 @@ const ShutterButtonEl = styled.button`
 `;
 
 /* ============================================================
+  MockButton — 목업 촬영 버튼
+============================================================ */
+export const MockButton = styled.button`
+  ${font("regbody")}
+  font-size: 12px;
+  color: ${COLORS.main};
+  background: ${COLORS.background_lightpurple};
+  border: 1px solid ${COLORS.sub};
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 8px 14px;
+  margin: 20px;
+  box-shadow: 0px 4px 10px 0px rgba(112, 91, 239, 0.15);
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  &:hover:not(:disabled) {
+    background: ${COLORS.sub};
+    box-shadow: 0px 4px 14px 0px rgba(112, 91, 239, 0.22);
+  }
+`;
+
+/* ============================================================
    CloseButton — 원형 ✕ 닫기 버튼 
 ============================================================ */
 export const CloseButton = styled.button`

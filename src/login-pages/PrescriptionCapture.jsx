@@ -1,16 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import Layout, { Content, Spacer } from "../components/Layout";
 import LoginTheme from "../components/Theme/LoginTheme";
 import { ToastOverlay } from "../components/Box/Box";
-import { SubButton, ShutterButton } from "../components/Button";
+import { SubButton, ShutterButton, MockButton } from "../components/Button";
 import { useLang } from "../hooks/useLang";
-
 import { getPrescriptionOcr } from "../api/prescription";
+import mockPrescriptionImg from "../assets/prescription.png";
 
 const PrescriptionCapture = () => {
   const navigate = useNavigate();
@@ -41,6 +40,18 @@ const PrescriptionCapture = () => {
     handleCapture(file);
   };
 
+  const handleUseMockPrescription = async () => {
+    setPreviewUrl(mockPrescriptionImg);
+    try {
+      const res = await fetch(mockPrescriptionImg);
+      const blob = await res.blob();
+      const file = new File([blob], "mock-prescription.jpg", { type: blob.type });
+      handleCapture(file);
+    } catch (err) {
+      setError(t("ocrError"));
+    }
+  };
+
   const handleCapture = async (file) => {
     setIsScanning(true);
     setError(null);
@@ -69,6 +80,9 @@ const PrescriptionCapture = () => {
 
         <ShutterArea>
           <ShutterButton onClick={handleShutterClick} ariaLabel={t("shootPrescription")} disabled={isScanning} />
+          <MockButton type="button" onClick={handleUseMockPrescription} disabled={isScanning}>
+            {t("useMockPrescription")}
+          </MockButton>
         </ShutterArea>
 
         <input

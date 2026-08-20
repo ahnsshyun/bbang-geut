@@ -46,8 +46,8 @@ const Login = () => {
   const navigate = useNavigate();
   const { t } = useLang();
   const selectedLang = getCurrentLang();
-  const [patientId, setPatientId] = useState("NR-2608-0184");
-  const [birthDate, setBirthDate] = useState("19870930");
+  const [patientId, setPatientId] = useState("NR-2608-0417");
+  const [birthDate, setBirthDate] = useState("19940512");
   const [errors, setErrors] = useState({ patientId: "", birthDate: "" });
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -181,7 +181,7 @@ const Login = () => {
           {t("noticeLine2")}
           <br /><br />
           <span style={{ color: "#999", fontSize: "11px" }}>
-            [시연제출용] ID: NR-2608-0184 · 생년월일: 19870930
+            [시연제출용] ID: NR-2608-0417 · 생년월일: 19940512
           </span>
         </NoticeBox>
       </Content>

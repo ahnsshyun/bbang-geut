@@ -1,15 +1,13 @@
 import React from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import Layout, { Content, Spacer } from "../components/Layout";
 import LoginTheme from "../components/Theme/LoginTheme";
 import { NoticeBox, PromptBox, PromptDesc, InfoBox, InfoRow } from "../components/Box/Box";
-import Button from "../components/Button";
+import Button, { MockButton } from "../components/Button";
 import { useLang } from "../hooks/useLang";
-
 import { useMe } from "../hooks/useMe";
 import { useOnboardingStatus } from "../hooks/useOnboardingStatus";
 
@@ -118,16 +116,16 @@ const OnboardingIntake = () => {
 
         <Spacer />
 
-        {!prescription.registered && (
-          <PromptBox title={t("registerPrescriptionTitle")}>
-            <PromptDesc>
-              {t("registerPrescriptionDescPrefix")}{" "}<b>{t("registerPrescriptionDescBold")}</b>{t("registerPrescriptionDescSuffix")}
-            </PromptDesc>
-            <Button type="button" onClick={handleCapturePrescription}>
-              {t("capturePrescription")}
-            </Button>
-          </PromptBox>
-        )}
+{prescription.registered && (
+  <PromptBox title={t("registerPrescriptionTitle")}>
+    <PromptDesc>
+      {t("registerPrescriptionDescPrefix")}{" "}<b>{t("registerPrescriptionDescBold")}</b>{t("registerPrescriptionDescSuffix")}
+    </PromptDesc>
+    <MockButton type="button" onClick={handleCapturePrescription}>
+      {t("retakePrescription")}
+    </MockButton>
+  </PromptBox>
+)}
 
         {/* TODO: 원래 디자인엔 이 화면에 "다음" 버튼이 없었어요.
             처방 등록이 끝나면 더 이상 이 화면에서 할 일이 없어서 넘어갈 방법이
