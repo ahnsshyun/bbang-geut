@@ -82,6 +82,7 @@ const StatusGroupWrap = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
+  align-items: start
 `;
 
 const STATUS_STYLE = {
@@ -99,6 +100,7 @@ const StatusColumn = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+  height: fit-content
 `;
 
 const StatusHeader = styled.div`
@@ -194,8 +196,8 @@ export function ScheduleDayModal({
             <StatusColumn key={status} $status={status}>
               <StatusHeader>
                 <StatusDot $status={status} />
-                <StatusLabel $status={status}>{STATUS_STYLE[status].label}</StatusLabel>
                 <StatusLabel $status={status}>{t(STATUS_STYLE[status].labelKey)}</StatusLabel>
+                <StatusCount $status={status}>{statusGroups[status]?.length ?? 0}</StatusCount>
               </StatusHeader>
               <StatusItemList>
                 {(statusGroups[status] ?? []).map((item, i) => (

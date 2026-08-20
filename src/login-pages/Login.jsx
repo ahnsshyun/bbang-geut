@@ -101,7 +101,7 @@ const Login = () => {
       const serverMessage =
         err.response?.data?.detail ||
         err.response?.data?.message ||
-        err.response?.data?.error;
+        err.response?.data?.error?.message;
 
       if (err.response?.status === 401 || err.response?.status === 404) {
         setFormError(serverMessage || t("loginFail401"));
