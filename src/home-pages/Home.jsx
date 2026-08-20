@@ -153,7 +153,7 @@ const Home = () => {
       value: summary.next_unlock ? `D+${summary.next_unlock.day}` : "-",
       label: summary.next_unlock ? summary.next_unlock.label.split(" — ")[0] : t("homeNextUnlock"),
     },
-    { value: `D-${summary.return_dn}`, label: `${t("homeReturn")} (${formatDot(summary.return_date)})` },
+    { value: `D-${Math.abs(summary.return_dn)}`, label: `${t("homeReturn")} (${formatDot(summary.return_date)})` },
   ];
 
   const handleToggle = (task) => async (index) => {

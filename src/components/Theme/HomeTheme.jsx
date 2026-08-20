@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import COLORS from "../../styles/colors";
 import FONTS, { font } from "../../styles/fonts";
@@ -5,6 +6,7 @@ import FONTS, { font } from "../../styles/fonts";
 import { HomeIcon, CameraIcon, RecordIcon, HospitalIcon } from "../Icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useLang } from "../../hooks/useLang";
+import { getNotifications } from "../../api/notifications";
 
 const Wrapper = styled.div`
   min-height: 100vh;
@@ -49,6 +51,11 @@ const BannerText = styled.p`
   margin: 0;
 `;
 
+const AlertButtonWrap = styled.div`
+  position: relative;
+  flex-shrink: 0;
+`;
+
 const AlertButton = styled.button`
   width: 32px;
   height: 32px;
@@ -59,6 +66,17 @@ const AlertButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
+`;
+
+const UnreadDot = styled.span`
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: ${COLORS.error};
+  border: 1.5px solid #ffffff;
 `;
 
 /* ============================================================
@@ -154,7 +172,26 @@ const TabLabel = styled.span`
 const HomeTheme = ({ bannerTitle = "나란히", onBellClick, children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const [hasUnread, setHasUnread] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getNotifications({ lang })
+      .then((data) => {
+        if (cancelled) return;
+        const unread = (data.items ?? []).some((item) => item.unread);
+        setHasUnread(unread);
+      })
+      .catch(() => {
+        // 알림 조회 실패는 화면 이용에 지장 없도록 조용히 무시
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [location.pathname, lang]);
 
   const DEFAULT_TABS = [
     { key: "home", Icon: HomeIcon, label: t("tabHome"), path: "/home" },
@@ -163,14 +200,14 @@ const HomeTheme = ({ bannerTitle = "나란히", onBellClick, children }) => {
     { key: "hospital", Icon: HospitalIcon, label: t("tabHospital"), path: "/hospital" },
   ];
 
-const tabs = DEFAULT_TABS.map((tab) => ({
-  ...tab,
-  active:
-    tab.key === "history"
-      ? location.pathname.startsWith("/history") || location.pathname === "/home-country"
-      : location.pathname === tab.path,
-  onClick: () => navigate(tab.path),
-}));
+  const tabs = DEFAULT_TABS.map((tab) => ({
+    ...tab,
+    active:
+      tab.key === "history"
+        ? location.pathname.startsWith("/history") || location.pathname === "/home-country"
+        : location.pathname === tab.path,
+    onClick: () => navigate(tab.path),
+  }));
 
   return (
     <Wrapper>
@@ -179,24 +216,27 @@ const tabs = DEFAULT_TABS.map((tab) => ({
           <BannerTitle>{bannerTitle}</BannerTitle>
           <BannerText>{t("bannerSubtitle")}</BannerText>
         </BannerTitleGroup>
-        <AlertButton onClick={() => navigate("/notification")} aria-label="알림">
-          🔔
-        </AlertButton>
+        <AlertButtonWrap>
+          <AlertButton onClick={() => navigate("/notification")} aria-label={t("notificationTitle")}>
+            🔔
+          </AlertButton>
+          {hasUnread && <UnreadDot />}
+        </AlertButtonWrap>
       </TopBanner>
 
       <Body>{children}</Body>
 
       {tabs.length > 0 && (
         <BarWrapper>
-{tabs.map((tab) => (
-  <TabItem key={tab.key} onClick={tab.onClick}>
-    {tab.active && <ActiveIndicator />}
-    <TabIcon $active={tab.active}>
-      <tab.Icon active={tab.active} />
-    </TabIcon>
-    <TabLabel $active={tab.active}>{tab.label}</TabLabel>
-  </TabItem>
-))}
+          {tabs.map((tab) => (
+            <TabItem key={tab.key} onClick={tab.onClick}>
+              {tab.active && <ActiveIndicator />}
+              <TabIcon $active={tab.active}>
+                <tab.Icon active={tab.active} />
+              </TabIcon>
+              <TabLabel $active={tab.active}>{tab.label}</TabLabel>
+            </TabItem>
+          ))}
         </BarWrapper>
       )}
     </Wrapper>
