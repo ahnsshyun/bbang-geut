@@ -26,8 +26,8 @@ const CheckinPhoto = () => {
 
   const STEPS = [
     { key: "front", label: t("front"), shortLabel: t("frontShot"), guideImage: faceGuideFront },
-    { key: "left", label: t("left"), shortLabel: t("leftShot"), guideImage: faceGuideLeft },
-    { key: "right", label: t("right"), shortLabel: t("rightShot"), guideImage: faceGuideRight },
+    { key: "left", label: t("left"), shortLabel: t("leftShot"), guideImage: faceGuideRight },
+    { key: "right", label: t("right"), shortLabel: t("rightShot"), guideImage: faceGuideLeft },
   ];
 
 
@@ -157,7 +157,9 @@ const CheckinPhoto = () => {
             disabled={isUploading}
           />
 
-          <Spacer />
+        <MainButton disabled={!isCurrentCaptured || isUploading} onClick={handleNext}>
+          {isUploading ? t("uploading") : isLastStep ? t("complete") : t("next")}
+        </MainButton>
 
           {uploadError ? (
             <ErrorBox>{uploadError}</ErrorBox>
@@ -179,11 +181,6 @@ const CheckinPhoto = () => {
           onChange={handleFileChange}
         />
 
-        <Spacer />
-
-        <MainButton disabled={!isCurrentCaptured || isUploading} onClick={handleNext}>
-          {isUploading ? t("uploading") : isLastStep ? t("complete") : t("next")}
-        </MainButton>
       </Content>
     </Layout>
   );
