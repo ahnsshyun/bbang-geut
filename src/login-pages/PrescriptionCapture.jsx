@@ -60,8 +60,14 @@ const PrescriptionCapture = () => {
       localStorage.setItem("naranhi_prescription_ocr", JSON.stringify(result));
       navigate("/onboarding/prescription/result");
     } catch (err) {
-      setError(err.response?.data?.message || t("ocrError"));
-      setIsScanning(false);
+    const code = err.response?.data?.error?.code;
+    if (code === "PRESCRIPTION_ALREADY_CONFIRMED") {
+      // 이미 확정됐어도 에러 없이 result 페이지로 이동해서 확인 과정을 거치도록 함
+      navigate("/onboarding/prescription/result");
+      return;
+    }
+    setError(err.response?.data?.error?.message || t("ocrError"));
+    setIsScanning(false);
     }
   };
 
@@ -95,8 +101,6 @@ const PrescriptionCapture = () => {
         />
 
         {error && <ErrorText>{error}</ErrorText>}
-
-        <Spacer />
 
         <SubButton onClick={() => navigate("/onboarding/intake")}>
           {t("back")}
@@ -134,7 +138,7 @@ const ShutterArea = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  margin: 28px 0;
+  margin: 20px 0;
 `;
 
 const ShutterCaption = styled.p`

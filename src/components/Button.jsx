@@ -90,7 +90,7 @@ export const MockButton = styled.button`
   border-radius: 8px;
   cursor: pointer;
   padding: 8px 14px;
-  margin: 20px;
+  margin-top: 20px;
   box-shadow: 0px 4px 10px 0px rgba(112, 91, 239, 0.15);
   &:disabled {
     opacity: 0.5;

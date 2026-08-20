@@ -65,7 +65,8 @@ const OnboardingIntake = () => {
   }
 
   const hospitalName = me.clinic.name;
-  const { documents, prescription } = status;
+  const { documents } = status;
+  const isPrescriptionRegistered = localStorage.getItem("naranhi_prescription_registered") === "true";
 
   // TODO: status.can_proceed 값으로 "다음 단계" 버튼을 막을 지점인데,
   // 지금 이 화면 디자인엔 별도 버튼이 없어서(처방전 촬영 버튼뿐) 아직 어디에도 안 쓰고 있어요.
@@ -106,7 +107,7 @@ const OnboardingIntake = () => {
               <Icon>➕</Icon>
               <RowLabel>{t("patientPrescription")}</RowLabel>
             </RowLeft>
-            {prescription.registered ? (
+            {isPrescriptionRegistered ? (
               <StatusReceived>{t("registered")}</StatusReceived>
             ) : (
               <StatusAction>{t("registerDirect")}</StatusAction>
@@ -116,22 +117,22 @@ const OnboardingIntake = () => {
 
         <Spacer />
 
-{prescription.registered && (
-  <PromptBox title={t("registerPrescriptionTitle")}>
-    <PromptDesc>
-      {t("registerPrescriptionDescPrefix")}{" "}<b>{t("registerPrescriptionDescBold")}</b>{t("registerPrescriptionDescSuffix")}
-    </PromptDesc>
+<PromptBox title={t("registerPrescriptionTitle")}>
+  <PromptDesc>
+    {t("registerPrescriptionDescPrefix")}{" "}<b>{t("registerPrescriptionDescBold")}</b>{t("registerPrescriptionDescSuffix")}
+  </PromptDesc>
+  {isPrescriptionRegistered ? (
     <MockButton type="button" onClick={handleCapturePrescription}>
       {t("retakePrescription")}
     </MockButton>
-  </PromptBox>
-)}
+  ) : (
+    <Button type="button" onClick={handleCapturePrescription}>
+      {t("capturePrescription")}
+    </Button>
+  )}
+</PromptBox>
 
-        {/* TODO: 원래 디자인엔 이 화면에 "다음" 버튼이 없었어요.
-            처방 등록이 끝나면 더 이상 이 화면에서 할 일이 없어서 넘어갈 방법이
-            없길래(=사용자 막힘) 임시로 추가한 버튼입니다.
-            팀원과 상의해서 디자인에 맞는 위치/문구로 다시 다듬으면 좋을 것 같아요. */}
-        {prescription.registered && (
+        {isPrescriptionRegistered && (
           <Button type="button" onClick={() => navigate("/onboarding/check")}>
             {t("nextStep")}
           </Button>

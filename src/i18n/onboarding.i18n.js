@@ -28,7 +28,7 @@ export const onboarding = {
     back: "뒤로",
 
     ocrDataMissing: "처방전 인식 정보가 없습니다. 다시 촬영해 주세요.",
-    retakePrescription: "처방전 다시 촬영하기",
+    retakePrescription: "처방전 촬영하기",
     confirmInfoTitle: "처방 정보를 확인해주세요",
     confirmInfoDescBold: "약물명 · 1회 투약량 · 1일 투약 횟수 · 총 투약 일수",
     confirmInfoDescSuffix: "를 읽었어요.",
@@ -112,6 +112,7 @@ export const onboarding = {
     rowClinic: "시술 기관",
     rowPatient: "환자",
     surgeryInfoNotice: "정보가 다르면 병원 국제진료팀으로 문의해 주세요",
+    useMockPrescription: "샘플 처방전 불러오기",
   },
 
   ja: {
@@ -227,5 +228,6 @@ export const onboarding = {
     rowClinic: "施術機関",
     rowPatient: "患者",
     surgeryInfoNotice: "情報が異なる場合は、病院の国際診療チームまでお問い合わせください",
+    useMockPrescription: "サンプル処方箋で進める",
   },
 };
