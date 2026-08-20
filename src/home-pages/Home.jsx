@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import HomeTheme from "../components/Theme/HomeTheme";
 import { ProgressCard, CheckinBox, RoutineSection, RoutineCard, StatusGroupList } from "../components/Box/HomeBox";
 import { RoutineDetailModal, DrugDetailModal } from "../components/Modal/Modal";
-
 import { useHome } from "../hooks/useHome";
 import { putTaskLog, getCareItem } from "../api/home";
 import { useLang, getCurrentLang } from "../hooks/useLang";
@@ -65,6 +64,15 @@ function formatSurgeryDateLabel(dateStr, day) {
   return `${y}.${m}.${d}`;
 }
 
+function readJSON(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
 function formatDot(dateStr) {
   const date = new Date(dateStr);
   const y = date.getFullYear();
@@ -80,7 +88,7 @@ const Home = () => {
 
   const [checks, setChecks] = useState({});
   const [detailKey, setDetailKey] = useState(null);
-  const [isDrugModalOpen, setIsDrugModalOpen] = useState(false);
+  const [drugDetailKey, setDrugDetailKey] = useState(null);
   const [statusDetailKey, setStatusDetailKey] = useState(null);
 
   const [careItem, setCareItem] = useState(null);
@@ -93,8 +101,8 @@ const Home = () => {
   }, [home]);
 
   useEffect(() => {
-    const activeKey = detailKey ?? statusDetailKey;
-    const kind = detailKey ? "task" : statusDetailKey ? "rule" : null;
+    const activeKey = detailKey ?? drugDetailKey ?? statusDetailKey;
+    const kind = (detailKey || drugDetailKey) ? "task" : statusDetailKey ? "rule" : null;
     if (!activeKey || !kind) {
       setCareItem(null);
       setCareItemError(null);
@@ -195,22 +203,25 @@ const Home = () => {
 
       <CheckinBox done={checkin.completed} dDay={day} />
 
-      <RoutineSection title={t("homeTodayRoutine")}>
-        {tasks.map((task) => (
-          <RoutineCard
-            key={task.key}
-            icon={task.icon || TASK_ICON_FALLBACK[task.key] || "📝"}
-            title={task.name}
-            meta={`${t("perDay")} ${task.times_per_day}${t("times")}`}
-            description=""
-            totalChecks={task.times_per_day}
-            checkedCount={checks[task.key] ?? task.done_count}
-            onToggleCheck={handleToggle(task)}
-            onOpenDetail={() => setDetailKey(task.key)}
-            variant="default"
-          />
-        ))}
-      </RoutineSection>
+<RoutineSection title={t("homeTodayRoutine")}>
+{tasks.map((task) => {
+  const isMedication = task.source === "prescription";
+  return (
+    <RoutineCard
+      key={task.key}
+      icon={task.icon || TASK_ICON_FALLBACK[task.key] || "📝"}
+      title={task.name}
+      meta={`${t("perDay")} ${task.times_per_day}${t("times")}`}
+      description=""
+      totalChecks={task.times_per_day}
+      checkedCount={checks[task.key] ?? task.done_count}
+      onToggleCheck={handleToggle(task)}
+      onOpenDetail={() => (isMedication ? setDrugDetailKey(task.key) : setDetailKey(task.key))}
+      variant={isMedication ? "drug" : "default"}
+    />
+  );
+})}
+</RoutineSection>
 
       <RoutineSection title={t("homeTodayStatus")}>
         <StatusGroupList
@@ -239,16 +250,38 @@ const Home = () => {
         />
       )}
 
-      {isDrugModalOpen && (
-        <DrugDetailModal
-          title={t("drugTitle")}
-          meta=""
-          requiredDrugs={[]}
-          asNeededDrugs={[]}
-          periodNote={t("drugPending")}
-          onClose={() => setIsDrugModalOpen(false)}
-        />
-      )}
+{drugDetailKey && (() => {
+  const drugTask = tasks.find((t) => t.key === drugDetailKey);
+  const ocrData = readJSON("naranhi_prescription_ocr");
+  const regularDrugs = (ocrData?.items ?? []).filter((item) => !item.is_prn);
+  const prnDrugs = (ocrData?.items ?? []).filter((item) => item.is_prn);
+  return (
+    <DrugDetailModal
+      title={t("drugTitle")}
+      meta={drugTask?.subtitle ?? ""}
+      requiredDrugs={regularDrugs.map((drug) => ({
+        badge: drug.category,
+        name: drug.drug_name,
+        ingredient: drug.drug_name,
+        amount: drug.dose,
+        frequency: drug.times_per_day,
+        duration: drug.days,
+        instruction: drug.usage,
+      }))}
+      asNeededDrugs={prnDrugs.map((drug) => ({
+        badge: drug.category,
+        name: drug.drug_name,
+        ingredient: drug.drug_name,
+        amount: drug.dose,
+        frequency: drug.times_per_day,
+        duration: drug.days,
+        instruction: drug.usage,
+      }))}
+      periodNote={regularDrugs.length === 0 && prnDrugs.length === 0 ? t("drugPending") : undefined}
+      onClose={() => setDrugDetailKey(null)}
+    />
+  );
+})()}
 
       {detailStatus && (
         <RoutineDetailModal

@@ -334,6 +334,14 @@ export function DrugDetailModal({
         </div>
       )}
 
+      <NoticeBox>
+        <b>{t("regularDrugNoticeBold")}</b>{t("regularDrugNoticeSuffix")}
+        <br />
+        <b>{t("prnDrugNoticeBold")}</b>{t("prnDrugNoticeSuffix")}
+        <br />
+        {t("medicationInquiryNotice")}
+      </NoticeBox>
+
       {periodNote && <NoticeBox>{periodNote}</NoticeBox>}
     </Modal>
   );
