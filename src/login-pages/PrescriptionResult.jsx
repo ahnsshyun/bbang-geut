@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 
@@ -22,10 +22,20 @@ const PrescriptionResult = () => {
     const raw = localStorage.getItem("naranhi_prescription_ocr");
     return raw ? JSON.parse(raw) : null;
   });
-  const [photoUrl] = useState(() => localStorage.getItem("naranhi_prescription_photo"));
+
+const [photoUrl, setPhotoUrl] = useState(null);
+
+useEffect(() => {
+  setPhotoUrl(localStorage.getItem("naranhi_prescription_photo"));
+}, []);
 
   const regularDrugs = (ocrData?.items ?? []).filter((item) => !item.is_prn);
   const prnDrugs = (ocrData?.items ?? []).filter((item) => item.is_prn);
+
+  // 시연용 복약 일수 로직 설정
+const totalMedicationDays = regularDrugs.length > 0
+  ? Math.max(...regularDrugs.map((d) => Number(d.days) || 0))
+  : 0;
 
   const handleRetake = () => navigate("/onboarding/prescription/capture");
 

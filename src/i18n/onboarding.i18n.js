@@ -113,6 +113,7 @@ export const onboarding = {
     rowPatient: "환자",
     surgeryInfoNotice: "정보가 다르면 병원 국제진료팀으로 문의해 주세요",
     useMockPrescription: "샘플 처방전 불러오기",
+    useMockPrescriptionPrompt: "샘플 처방전을 읽혀주세요",
   },
 
   ja: {
@@ -229,5 +230,6 @@ export const onboarding = {
     rowPatient: "患者",
     surgeryInfoNotice: "情報が異なる場合は、病院の国際診療チームまでお問い合わせください",
     useMockPrescription: "サンプル処方箋で進める",
+    useMockPrescriptionPrompt: "サンプル処方箋を読み込んでください",
   },
 };

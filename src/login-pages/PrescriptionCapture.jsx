@@ -9,7 +9,7 @@ import { ToastOverlay } from "../components/Box/Box";
 import { SubButton, ShutterButton, MockButton } from "../components/Button";
 import { useLang } from "../hooks/useLang";
 import { getPrescriptionOcr } from "../api/prescription";
-import mockPrescriptionImg from "../assets/prescription.png";
+import mockPrescriptionImg from "../assets/mockPrescription.png";
 
 const PrescriptionCapture = () => {
   const navigate = useNavigate();
@@ -31,11 +31,12 @@ const PrescriptionCapture = () => {
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      localStorage.setItem("naranhi_prescription_photo", reader.result);
-    };
-    reader.readAsDataURL(file);
+  // Result 화면에서도 보여주기 위해 Base64로 변환해 저장
+  const reader = new FileReader();
+  reader.onloadend = () => {
+    localStorage.setItem("naranhi_prescription_photo", reader.result);
+  };
+  reader.readAsDataURL(file);
 
     handleCapture(file);
   };
@@ -46,13 +47,21 @@ const PrescriptionCapture = () => {
       const res = await fetch(mockPrescriptionImg);
       const blob = await res.blob();
       const file = new File([blob], "mock-prescription.jpg", { type: blob.type });
-      handleCapture(file);
+
+    // 목업 이미지도 동일하게 저장
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      localStorage.setItem("naranhi_prescription_photo", reader.result);
+    };
+    reader.readAsDataURL(blob);
+
+      await handleCapture(file, { silent: true });
     } catch (err) {
       setError(t("ocrError"));
     }
   };
 
-  const handleCapture = async (file) => {
+  const handleCapture = async (file, { silent = false } = {}) => {
     setIsScanning(true);
     setError(null);
     try {
@@ -60,14 +69,12 @@ const PrescriptionCapture = () => {
       localStorage.setItem("naranhi_prescription_ocr", JSON.stringify(result));
       navigate("/onboarding/prescription/result");
     } catch (err) {
-    const code = err.response?.data?.error?.code;
-    if (code === "PRESCRIPTION_ALREADY_CONFIRMED") {
-      // 이미 확정됐어도 에러 없이 result 페이지로 이동해서 확인 과정을 거치도록 함
-      navigate("/onboarding/prescription/result");
-      return;
-    }
-    setError(err.response?.data?.error?.message || t("ocrError"));
-    setIsScanning(false);
+      if (silent) {
+        navigate("/onboarding/prescription/result");
+        return;
+      }
+      setError(t("useMockPrescriptionPrompt"));
+      setIsScanning(false);
     }
   };
 
@@ -86,6 +93,7 @@ const PrescriptionCapture = () => {
 
         <ShutterArea>
           <ShutterButton onClick={handleShutterClick} ariaLabel={t("shootPrescription")} disabled={isScanning} />
+
           <MockButton type="button" onClick={handleUseMockPrescription} disabled={isScanning}>
             {t("useMockPrescription")}
           </MockButton>
@@ -101,6 +109,8 @@ const PrescriptionCapture = () => {
         />
 
         {error && <ErrorText>{error}</ErrorText>}
+
+        <Spacer />
 
         <SubButton onClick={() => navigate("/onboarding/intake")}>
           {t("back")}
