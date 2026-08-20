@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-
+import whiteLogo from "../assets/whiteLogo.png";
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import { setCurrentLang } from "../hooks/useLang";
@@ -26,13 +26,8 @@ const Splash = () => {
 
   const handleStart = () => {
     if (!lang) return;
-    console.log("1. handleStart 실행됨, 선택된 lang:", lang);
 
-    // TODO: 백엔드 API 연동
-    // - 실제 서비스에서는 언어 선택값을 서버(환자 프로필)에도 저장해
-    //   진료 기록·제출 문서 언어를 이 값 기준으로 고정해야 함
     setCurrentLang(lang);
-    console.log("2. 저장 직후 localStorage 값:", localStorage.getItem("naranhi_selected_lang"));
     navigate("/login");
   };
 
@@ -41,7 +36,7 @@ const Splash = () => {
     <Wrapper>
       <TopSection>
         <Label>{t("splashLabel")}</Label>
-        <Logo>나란히</Logo>
+        <LogoImg src={whiteLogo} alt="나란히" />
         <Tagline>
           {t("splashTaglineLine1")}
           <br />
@@ -102,6 +97,15 @@ const PageBackground = styled.div`
   );
 `;
 
+const LogoImg = styled.img`
+  height: 55px;
+  margin: 0 0 30px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+  align-self: flex-start;
+`;
+
 const Wrapper = styled.div`
   max-width: 360px;
   width: 100%;
@@ -131,15 +135,6 @@ const Label = styled.p`
   font-family: ${FONTS.fallback};
   color: #ffffff;
   margin: 0 0 25px;
-`;
-
-const Logo = styled.h1`
-  font-family: ${FONTS.fallback};
-  font-size: 55px;
-  font-weight: 800;
-  margin: 0 0 30px;
-  line-height: 36px;
-  letter-spacing: -4.4px;
 `;
 
 const Tagline = styled.p`

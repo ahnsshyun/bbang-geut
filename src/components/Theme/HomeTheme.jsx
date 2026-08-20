@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import COLORS from "../../styles/colors";
 import FONTS, { font } from "../../styles/fonts";
-
+import purpleLogo from "../../assets/purpleLogo.png";
 import { HomeIcon, CameraIcon, RecordIcon, HospitalIcon } from "../Icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useLang } from "../../hooks/useLang";
@@ -37,17 +37,18 @@ const TopBanner = styled.div`
   border-radius: 11px;
 `;
 
+const LogoImgPurple = styled.img`
+  height: 30px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+  align-self: flex-start;
+`;
+
 const BannerTitleGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
-`;
-
-const BannerTitle = styled.p`
-  ${font("boldbody")}
-  font-size: 22px;
-  color: ${COLORS.main};
-  margin: 0;
 `;
 
 const BannerSubInfo = styled.p`
@@ -227,7 +228,7 @@ const HomeTheme = ({ bannerTitle = "나란히", onBellClick, children }) => {
     <Wrapper>
       <TopBanner>
         <BannerTitleGroup>
-          <BannerTitle>{bannerTitle}</BannerTitle>
+          <LogoImgPurple src={purpleLogo} alt="나란히" />
           <BannerText>{t("bannerSubtitle")}</BannerText>
             {me && (
               <BannerSubInfo>
