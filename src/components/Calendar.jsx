@@ -3,8 +3,7 @@ import styled from "styled-components";
 import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import { getMonthMatrix, isSameDay } from "../utils/dateUtils";
-
-const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+import { useLang } from "../hooks/useLang";
 
 /**
  * props:
@@ -12,8 +11,8 @@ const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
  * - onSelect: (date: Date) => void
  * - minDate: 이 날짜보다 이전은 선택 불가 (보통 시술일)
  * - markedDate: 점(dot)을 찍을 날짜 (보통 수술일)
- * - hospitalVisitDates: 병원 내원일 배열 (연보라 배경 표시)
- * - returnDate: 귀국 예정일 (비행기 이모지 표시)
+ * - hospitalVisitDates: 병원 내원일 배열
+ * - returnDate: 귀국 예정일
  */
 const Calendar = ({
   selectedDate,
@@ -25,8 +24,13 @@ const Calendar = ({
   completeDate,
   checkinDates = [],
   remoteDates = [],
-  
 }) => {
+  const { t } = useLang();
+  const WEEKDAYS = [
+    t("weekdaySun"), t("weekdayMon"), t("weekdayTue"),
+    t("weekdayWed"), t("weekdayThu"), t("weekdayFri"), t("weekdaySat"),
+  ];
+
   const [viewDate, setViewDate] = useState(selectedDate || markedDate || new Date());
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
@@ -46,13 +50,13 @@ const Calendar = ({
     <Wrapper>
       <Header>
         <NavButton onClick={goPrevMonth}>‹</NavButton>
-        <MonthLabel>{year}년 {month + 1}월</MonthLabel>
+        <MonthLabel>{year}{t("yearUnit")} {month + 1}{t("monthUnit")}</MonthLabel>
         <NavButton onClick={goNextMonth}>›</NavButton>
       </Header>
 
       <WeekRow>
-        {WEEKDAYS.map((w) => (
-          <WeekdayCell key={w}>{w}</WeekdayCell>
+        {WEEKDAYS.map((w, i) => (
+          <WeekdayCell key={i}>{w}</WeekdayCell>
         ))}
       </WeekRow>
 

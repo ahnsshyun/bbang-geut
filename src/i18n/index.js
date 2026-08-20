@@ -8,6 +8,7 @@ import { history } from "./history.i18n";
 import { hospital } from "./hospital.i18n";
 import { notification } from "./notification.i18n";
 import { splash } from "./splash.i18n";
+import { calendar } from "./calendar.i18n";
 
 function merge(...parts) {
   return {
@@ -16,4 +17,4 @@ function merge(...parts) {
   };
 }
 
-export const dict = merge(theme, home, schedule, checkin, splash, login, onboarding, notification, history, hospital);
+export const dict = merge(theme, home, schedule, checkin, calendar, splash, login, onboarding, notification, history, hospital);
