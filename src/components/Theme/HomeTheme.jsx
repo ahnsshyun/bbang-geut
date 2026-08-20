@@ -152,7 +152,7 @@ const TabItem = styled.button`
 
 const ActiveIndicator = styled.span`
   position: absolute;
-  top: -6px;
+  top: -2px;
   left: 50%;
   transform: translateX(-50%);
   width: 20px;
@@ -202,7 +202,7 @@ const HomeTheme = ({ bannerTitle = "나란히", onBellClick, children }) => {
   const DEFAULT_TABS = [
     { key: "home", Icon: HomeIcon, label: t("tabHome"), path: "/home" },
     { key: "checkin", Icon: CameraIcon, label: t("tabCheckin"), path: "/checkin/photo" },
-    { key: "record", Icon: RecordIcon, label: t("tabRecord"), path: "/history", matchPaths: ["/history", "/home-country"] },
+    { key: "history", Icon: RecordIcon, label: t("tabRecord"), path: "/history", matchPaths: ["/history/submission", "/home-country"] },
     { key: "hospital", Icon: HospitalIcon, label: t("tabHospital"), path: "/hospital" },
   ];
 
