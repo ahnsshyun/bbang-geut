@@ -10,7 +10,7 @@ import { NoticeBox, PromptBox, PromptDesc, DrugBox } from "../components/Box/Box
 import Button, { SubButton } from "../components/Button";
 import { useLang } from "../hooks/useLang";
 
-import { confirmPrescription, getPrescriptionDetail } from "../api/prescription";
+import { confirmPrescription, getPrescriptionDetail, getPrescriptionOcr } from "../api/prescription";
 
 const PrescriptionResult = () => {
   const navigate = useNavigate();
@@ -18,35 +18,50 @@ const PrescriptionResult = () => {
   const [isConfirming, setIsConfirming] = useState(false);
   const [error, setError] = useState(null);
 
-  // ocr_id는 로컬(캡처 직후 저장된 값)에서만 읽는다. confirm 호출에 필요.
+  // ocr_id는 로컬(샘플처방전 불러오기 시 저장된 draft 값)에서 읽는다.
+  // 이미 확정된 처방전이 있으면 confirm 없이도 진행 가능하므로 필수는 아니다.
   const [ocrId] = useState(() => {
     const raw = localStorage.getItem("naranhi_prescription_ocr");
     const parsed = raw ? JSON.parse(raw) : null;
     return parsed?.ocr_id ?? null;
   });
 
-  // 약 정보는 API에서 받아온다. (ocr정보는 더 이상 사용하지 않음 — 실패해도 조용히 무시)
   const [ocrData, setOcrData] = useState(null);
   const [ocrLoading, setOcrLoading] = useState(true);
+  const [alreadyConfirmed, setAlreadyConfirmed] = useState(false);
 
   useEffect(() => {
-    if (!ocrId) {
-      setOcrLoading(false);
-      return undefined;
-    }
     let cancelled = false;
     setOcrLoading(true);
+
+    // 1) 이미 확정된 처방전이 있는지 먼저 확인한다 — 있으면 그걸 그대로 보여주고
+    //    confirm은 다시 호출할 필요가 없다.
     getPrescriptionDetail()
       .then((data) => {
-        if (!cancelled) setOcrData(data);
+        if (cancelled) return;
+        setOcrData(data);
+        setAlreadyConfirmed(true);
+        setOcrLoading(false);
       })
       .catch(() => {
-        // ocr정보는 사용하지 않으므로 에러는 무시하고 빈 상태로 둔다.
-        if (!cancelled) setOcrData(null);
-      })
-      .finally(() => {
-        if (!cancelled) setOcrLoading(false);
+        if (cancelled) return;
+        // 2) 확정된 처방전이 없으면(404 등) 로컬에 저장된 draft(ocr_id)를 확인한다.
+        if (!ocrId) {
+          setOcrLoading(false);
+          return;
+        }
+        getPrescriptionOcr()
+          .then((data) => {
+            if (!cancelled) setOcrData(data);
+          })
+          .catch(() => {
+            if (!cancelled) setOcrData(null);
+          })
+          .finally(() => {
+            if (!cancelled) setOcrLoading(false);
+          });
       });
+
     return () => {
       cancelled = true;
     };
@@ -69,6 +84,13 @@ const totalMedicationDays = regularDrugs.length > 0
   const handleRetake = () => navigate("/onboarding/prescription/capture");
 
   const handleSave = async () => {
+    // 이미 확정된 처방전이면 confirm을 다시 호출할 필요 없이 바로 다음 단계로.
+    if (alreadyConfirmed) {
+      localStorage.setItem("naranhi_prescription_registered", "true");
+      navigate("/onboarding/check");
+      return;
+    }
+
     if (!ocrId) {
       setError(t("ocrDataMissing"));
       return;
@@ -112,7 +134,17 @@ const totalMedicationDays = regularDrugs.length > 0
     }
   };
 
-  if (!ocrId) {
+  if (ocrLoading) {
+    return (
+      <Layout>
+        <Content>
+          <NoticeBox>{t("loading")}</NoticeBox>
+        </Content>
+      </Layout>
+    );
+  }
+
+  if (!ocrData) {
     return (
       <Layout>
         <Content>
@@ -149,9 +181,7 @@ const totalMedicationDays = regularDrugs.length > 0
           <PromptDesc>{t("retakeNotice")}</PromptDesc>
         </PromptBox>
 
-        {ocrLoading && <PromptDesc>{t("loading")}</PromptDesc>}
-
-        {!ocrLoading && regularDrugs.length > 0 && (
+        {regularDrugs.length > 0 && (
           <>
             <SectionHeading>🟢 {t("regularDrugCount")} {regularDrugs.length}{t("drugUnit")}</SectionHeading>
             {regularDrugs.map((drug) => (
@@ -169,7 +199,7 @@ const totalMedicationDays = regularDrugs.length > 0
           </>
         )}
 
-        {!ocrLoading && prnDrugs.length > 0 && (
+        {prnDrugs.length > 0 && (
           <>
             <SectionHeading>🟡 {t("prnDrugCount")} {prnDrugs.length}{t("drugUnit")}</SectionHeading>
             {prnDrugs.map((drug) => (
