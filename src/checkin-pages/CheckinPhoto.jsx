@@ -36,11 +36,6 @@ const CheckinPhoto = () => {
   const [uploadError, setUploadError] = useState("");
   const [isUploading, setIsUploading] = useState(false);
 
-  useEffect(() => {
-    if (checkin?.completed) {
-      navigate("/checkin/complete", { replace: true });
-    }
-  }, [checkin, navigate]);
 
   const currentStep = STEPS[stepIndex];
   const capturedCount = Object.values(photos).filter(Boolean).length;
