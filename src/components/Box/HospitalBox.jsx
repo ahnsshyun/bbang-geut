@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import COLORS from "../../styles/colors";
 import FONTS, { font } from "../../styles/fonts";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { NoticeBox, InfoBox } from "./Box";
 import MainButton from "../Button";
 import { useLang } from "../../hooks/useLang";
@@ -124,6 +124,17 @@ const ChatWrapper = styled.div`
   background: #ffffff;
   padding: 10px;
   border-radius: 11px;
+  height: 800px; /* 채팅창 전체 고정 높이 - 필요에 맞게 조정 */
+  overflow: hidden;
+`;
+
+const MessageScrollArea = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0; /* flex 자식이 overflow 되려면 필요 */
 `;
 
 const ChatDoctorName = styled.p`
@@ -383,6 +394,13 @@ export function ChatConsultation({
   scopeNoticeText,
 }) {
   const { t } = useLang();
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages.length]);
 
   return (
     <ChatWrapper>
@@ -421,6 +439,7 @@ export function ChatConsultation({
         </TranslateNotice>
       </InfoBox>
 
+      <MessageScrollArea ref={scrollRef}>
       {messages.map((msg, i) => {
         const showDate = i === 0 || msg.dateLabel !== messages[i - 1].dateLabel;
         return (
@@ -448,6 +467,7 @@ export function ChatConsultation({
           ))}
         </InfoBox>
       )}
+      </MessageScrollArea>
 
       <ChatInputWrap>
         <ChatTextarea

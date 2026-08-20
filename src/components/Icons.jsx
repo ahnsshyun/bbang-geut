@@ -1,8 +1,5 @@
 import COLORS from "../styles/colors";
 
-/* ============================================================
-   HomeIcon — 홈
-============================================================ */
 export const HomeIcon = ({ active = false, size = 18, ...props }) => (
   <svg
     width={size}
@@ -21,10 +18,7 @@ export const HomeIcon = ({ active = false, size = 18, ...props }) => (
   </svg>
 );
 
-/* ============================================================
-   CameraIcon — 체크인
-============================================================ */
-export const CameraIcon = ({ active = false, size = 18, ...props }) => (
+export const HospitalIcon = ({ active = false, size = 18, ...props }) => (
   <svg
     width={size}
     height={size}
@@ -43,9 +37,6 @@ export const CameraIcon = ({ active = false, size = 18, ...props }) => (
   </svg>
 );
 
-/* ============================================================
-   RecordIcon — 기록 (캘린더+체크)
-============================================================ */
 export const RecordIcon = ({ active = false, size = 17, ...props }) => (
   <svg
     width={size}
@@ -65,10 +56,7 @@ export const RecordIcon = ({ active = false, size = 17, ...props }) => (
   </svg>
 );
 
-/* ============================================================
-   HospitalIcon — 병원 연결 (fill 방식)
-============================================================ */
-export const HospitalIcon = ({ active = false, size = 20, ...props }) => (
+export const CameraIcon = ({ active = false, size = 20, ...props }) => (
   <svg
     width={size}
     height={(size * 18) / 20}
