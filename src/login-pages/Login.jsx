@@ -97,7 +97,6 @@ const Login = () => {
 
       saveAuthSession(data);
       localStorage.removeItem("naranhi_prescription_registered");
-      localStorage.removeItem("naranhi_selected_lang");
       navigate("/onboarding/intake");
     } catch (err) {
       const serverMessage =
