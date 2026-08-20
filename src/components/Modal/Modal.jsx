@@ -200,16 +200,15 @@ export function RoutineDetailModal({
         <ModalTitleGroup>
           <ModalIconWrap>{icon}</ModalIconWrap>
           <div style={{ flex: 1 }}>
-            <ModalSectionTitle>{resolvedQuestionLabel}</ModalSectionTitle>
+            <ModalTitle>{title}</ModalTitle>
             <ModalMeta>{meta}</ModalMeta>
           </div>
-        
         </ModalTitleGroup>
       }
     >
       
       <div>
-        <ModalSectionTitle>{questionLabel}</ModalSectionTitle>
+        <ModalSectionTitle>{resolvedQuestionLabel}</ModalSectionTitle>
         <ModalReasonText>{reason}</ModalReasonText>
       </div>
 
