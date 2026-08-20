@@ -1,12 +1,12 @@
 import apiClient from "./client";
 
-export async function getPrescriptionOcr(file) {
-  const formData = new FormData();
-  formData.append("image", file);
+export async function getPrescriptionOcr() {
+  const { data } = await apiClient.get("/api/v1/prescriptions/ocr");
+  return data;
+}
 
-  const { data } = await apiClient.post("/api/v2/prescriptions/ocr", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+export async function getPrescriptionDetail() {
+  const { data } = await apiClient.get("/api/v1/prescriptions/detail");
   return data;
 }
 

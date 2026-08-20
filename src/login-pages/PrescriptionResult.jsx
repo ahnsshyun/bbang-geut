@@ -10,7 +10,7 @@ import { NoticeBox, PromptBox, PromptDesc, DrugBox } from "../components/Box/Box
 import Button, { SubButton } from "../components/Button";
 import { useLang } from "../hooks/useLang";
 
-import { confirmPrescription } from "../api/prescription";
+import { confirmPrescription, getPrescriptionDetail } from "../api/prescription";
 
 const PrescriptionResult = () => {
   const navigate = useNavigate();
@@ -18,10 +18,39 @@ const PrescriptionResult = () => {
   const [isConfirming, setIsConfirming] = useState(false);
   const [error, setError] = useState(null);
 
-  const [ocrData] = useState(() => {
+  // ocr_id는 로컬(캡처 직후 저장된 값)에서만 읽는다. confirm 호출에 필요.
+  const [ocrId] = useState(() => {
     const raw = localStorage.getItem("naranhi_prescription_ocr");
-    return raw ? JSON.parse(raw) : null;
+    const parsed = raw ? JSON.parse(raw) : null;
+    return parsed?.ocr_id ?? null;
   });
+
+  // 약 정보는 API에서 받아온다. (ocr정보는 더 이상 사용하지 않음 — 실패해도 조용히 무시)
+  const [ocrData, setOcrData] = useState(null);
+  const [ocrLoading, setOcrLoading] = useState(true);
+
+  useEffect(() => {
+    if (!ocrId) {
+      setOcrLoading(false);
+      return undefined;
+    }
+    let cancelled = false;
+    setOcrLoading(true);
+    getPrescriptionDetail()
+      .then((data) => {
+        if (!cancelled) setOcrData(data);
+      })
+      .catch(() => {
+        // ocr정보는 사용하지 않으므로 에러는 무시하고 빈 상태로 둔다.
+        if (!cancelled) setOcrData(null);
+      })
+      .finally(() => {
+        if (!cancelled) setOcrLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ocrId]);
 
 const [photoUrl, setPhotoUrl] = useState(null);
 
@@ -40,7 +69,7 @@ const totalMedicationDays = regularDrugs.length > 0
   const handleRetake = () => navigate("/onboarding/prescription/capture");
 
   const handleSave = async () => {
-    if (!ocrData?.ocr_id) {
+    if (!ocrId) {
       setError(t("ocrDataMissing"));
       return;
     }
@@ -49,7 +78,7 @@ const totalMedicationDays = regularDrugs.length > 0
     setError(null);
 
     try {
-      const result = await confirmPrescription(ocrData.ocr_id);
+      const result = await confirmPrescription(ocrId);
 
       const summary = {
         firstDrugName: regularDrugs[0]?.drug_name ?? "",
@@ -83,7 +112,7 @@ const totalMedicationDays = regularDrugs.length > 0
     }
   };
 
-  if (!ocrData) {
+  if (!ocrId) {
     return (
       <Layout>
         <Content>
@@ -120,7 +149,9 @@ const totalMedicationDays = regularDrugs.length > 0
           <PromptDesc>{t("retakeNotice")}</PromptDesc>
         </PromptBox>
 
-        {regularDrugs.length > 0 && (
+        {ocrLoading && <PromptDesc>{t("loading")}</PromptDesc>}
+
+        {!ocrLoading && regularDrugs.length > 0 && (
           <>
             <SectionHeading>🟢 {t("regularDrugCount")} {regularDrugs.length}{t("drugUnit")}</SectionHeading>
             {regularDrugs.map((drug) => (
@@ -138,7 +169,7 @@ const totalMedicationDays = regularDrugs.length > 0
           </>
         )}
 
-        {prnDrugs.length > 0 && (
+        {!ocrLoading && prnDrugs.length > 0 && (
           <>
             <SectionHeading>🟡 {t("prnDrugCount")} {prnDrugs.length}{t("drugUnit")}</SectionHeading>
             {prnDrugs.map((drug) => (

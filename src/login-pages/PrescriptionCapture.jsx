@@ -23,16 +23,17 @@ const PrescriptionCapture = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
+const handleFileChange = (e) => {
+  const file = e.target.files?.[0];
+  e.target.value = "";
+  if (!file) return;
 
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
+  const url = URL.createObjectURL(file);
+  setPreviewUrl(url);
 
-    setError(t("useMockPrescriptionPrompt"));
-  };
+  // 실제 촬영은 API 호출 없이 항상 안내 문구만 표시
+  setError(t("useMockPrescriptionPrompt"));
+};
 
 const handleUseMockPrescription = async () => {
   setPreviewUrl(mockPrescriptionImg);
@@ -40,20 +41,15 @@ const handleUseMockPrescription = async () => {
   setError(null);
 
   try {
-    const res = await fetch(mockPrescriptionImg);
-    const blob = await res.blob();
-    const file = new File([blob], "mock-prescription.jpg", { type: blob.type });
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      localStorage.setItem("naranhi_prescription_photo", reader.result);
-    };
-    reader.readAsDataURL(blob);
-
-    const result = await getPrescriptionOcr(file);
+    const result = await getPrescriptionOcr();
     localStorage.setItem("naranhi_prescription_ocr", JSON.stringify(result));
     navigate("/onboarding/prescription/result");
   } catch (err) {
+    const code = err.response?.data?.error?.code;
+    if (code === "PRESCRIPTION_ALREADY_CONFIRMED") {
+      navigate("/onboarding/prescription/result");
+      return;
+    }
     setError(err.response?.data?.error?.message || t("ocrError"));
     setIsScanning(false);
   }

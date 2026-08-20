@@ -7,6 +7,7 @@ import { useHome } from "../hooks/useHome";
 import { putTaskLog, getCareItem } from "../api/home";
 import { useLang, getCurrentLang } from "../hooks/useLang";
 import { getStoredPatient } from "../api/auth";
+import { getPrescriptionDetail } from "../api/prescription";
 
 const TASK_ICON_FALLBACK = {
   sleep45: "🛌",
@@ -64,21 +65,64 @@ function formatSurgeryDateLabel(dateStr, day) {
   return `${y}.${m}.${d}`;
 }
 
-function readJSON(key) {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
 function formatDot(dateStr) {
   const date = new Date(dateStr);
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}.${m}.${d}`;
+}
+
+function prescriptionErrorMessage(err, t) {
+  const code = err?.response?.data?.error?.code;
+  if (code === "ONBOARDING_REQUIRED") return t("onboardingRequired");
+  if (code === "PRESCRIPTION_NOT_FOUND") return t("drugPending");
+  if (err?.response?.status === 403) return t("onboardingRequired");
+  if (err?.response?.status === 404) return t("drugPending");
+  return t("careItemLoadError");
+}
+
+function DrugDetailModalContainer({ ocrData, loading, ocrError, onClose }) {
+  const { t } = useLang();
+
+  const regularDrugs = (ocrData?.items ?? []).filter((item) => !item.is_prn);
+  const prnDrugs = (ocrData?.items ?? []).filter((item) => item.is_prn);
+
+  let periodNote;
+  if (loading) {
+    periodNote = t("loading");
+  } else if (ocrError) {
+    periodNote = prescriptionErrorMessage(ocrError, t);
+  } else if (regularDrugs.length === 0 && prnDrugs.length === 0) {
+    periodNote = t("drugPending");
+  }
+
+  return (
+    <DrugDetailModal
+      title={t("drugTitle")}
+      meta={ocrData?.total_days ? `${t("totalMedicationDays")} ${ocrData.total_days}${t("dayUnit")}` : ""}
+      requiredDrugs={regularDrugs.map((drug) => ({
+        badge: drug.category,
+        name: drug.drug_name,
+        ingredient: drug.drug_name,
+        amount: drug.dose,
+        frequency: drug.times_per_day,
+        duration: drug.days,
+        instruction: drug.usage,
+      }))}
+      asNeededDrugs={prnDrugs.map((drug) => ({
+        badge: drug.category,
+        name: drug.drug_name,
+        ingredient: drug.drug_name,
+        amount: drug.dose,
+        frequency: drug.times_per_day,
+        duration: drug.days,
+        instruction: drug.usage,
+      }))}
+      periodNote={periodNote}
+      onClose={onClose}
+    />
+  );
 }
 
 const Home = () => {
@@ -95,10 +139,37 @@ const Home = () => {
   const [careItemLoading, setCareItemLoading] = useState(false);
   const [careItemError, setCareItemError] = useState(null);
 
+  const [prescription, setPrescription] = useState(null);
+  const [prescriptionLoading, setPrescriptionLoading] = useState(true);
+  const [prescriptionError, setPrescriptionError] = useState(null);
+
   useEffect(() => {
     if (!home) return;
     setChecks(Object.fromEntries(home.tasks.map((t) => [t.key, t.done_count])));
   }, [home]);
+
+  // 홈 화면 진입 시 처방전 OCR 정보를 한 번 받아온다.
+  useEffect(() => {
+    let cancelled = false;
+    setPrescriptionLoading(true);
+    setPrescriptionError(null);
+    getPrescriptionDetail()
+      .then((data) => {
+        if (!cancelled) setPrescription(data);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setPrescription(null);
+          setPrescriptionError(err);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setPrescriptionLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const activeKey = detailKey ?? drugDetailKey ?? statusDetailKey;
@@ -250,38 +321,14 @@ const Home = () => {
         />
       )}
 
-{drugDetailKey && (() => {
-  const drugTask = tasks.find((t) => t.key === drugDetailKey);
-  const ocrData = readJSON("naranhi_prescription_ocr");
-  const regularDrugs = (ocrData?.items ?? []).filter((item) => !item.is_prn);
-  const prnDrugs = (ocrData?.items ?? []).filter((item) => item.is_prn);
-  return (
-    <DrugDetailModal
-      title={t("drugTitle")}
-      meta={drugTask?.subtitle ?? ""}
-      requiredDrugs={regularDrugs.map((drug) => ({
-        badge: drug.category,
-        name: drug.drug_name,
-        ingredient: drug.drug_name,
-        amount: drug.dose,
-        frequency: drug.times_per_day,
-        duration: drug.days,
-        instruction: drug.usage,
-      }))}
-      asNeededDrugs={prnDrugs.map((drug) => ({
-        badge: drug.category,
-        name: drug.drug_name,
-        ingredient: drug.drug_name,
-        amount: drug.dose,
-        frequency: drug.times_per_day,
-        duration: drug.days,
-        instruction: drug.usage,
-      }))}
-      periodNote={regularDrugs.length === 0 && prnDrugs.length === 0 ? t("drugPending") : undefined}
-      onClose={() => setDrugDetailKey(null)}
-    />
-  );
-})()}
+{drugDetailKey && (
+  <DrugDetailModalContainer
+    ocrData={prescription}
+    loading={prescriptionLoading}
+    ocrError={prescriptionError}
+    onClose={() => setDrugDetailKey(null)}
+  />
+)}
 
       {detailStatus && (
         <RoutineDetailModal
