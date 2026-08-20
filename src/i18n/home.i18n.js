@@ -44,6 +44,8 @@ export const home = {
    requiredDrugTitle: "정해진 시간에 복용해야 하는 약",
    drugUnit: "종",
    asNeededDrugTitle: "필요시 약",
+   totalMedicationDays: "총 복약일수",
+   dayUnit: "일",
   },
 
   ja: {
@@ -91,5 +93,7 @@ export const home = {
    requiredDrugTitle: "決まった時間に服用すべき薬",
    drugUnit: "種",
    asNeededDrugTitle: "必要時の薬",
+   totalMedicationDays: "総服薬日数",
+   dayUnit: "日",
   },
 };
