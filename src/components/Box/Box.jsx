@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import COLORS from '../../styles/colors';
 import FONTS, { font } from '../../styles/fonts';
+import { useLang } from "../../hooks/useLang";
 
 /* ============================================================
    1. NoticeBox — 회색 안내 박스 (내용 텍스트만)
@@ -146,12 +147,6 @@ const DrugBadge = styled.span`
 const DrugName = styled.div`
   ${font("boldbody")}
   color: #000000;
-
-  span {
-    ${font("regbody")}
-    color: ${COLORS.text_gray};
-    margin-left: 6px;
-  }
 `;
 
 const DrugInfoRow = styled.div`
@@ -194,25 +189,25 @@ const DrugTop = styled.div`
 `;
 
 export function DrugBox({ badge, name, ingredient, amount, frequency, duration, instruction, asNeeded = false }) {
+  const { t } = useLang();
+  
   return (
     <DrugCard $asNeeded={asNeeded}>
       <DrugTop>
         <DrugBadge $asNeeded={asNeeded}>{badge}</DrugBadge>
-        <DrugName>
-          {name} <span>({ingredient})</span>
-        </DrugName>
+        <DrugName>{name} </DrugName>
       </DrugTop>
       <DrugInfoRow>
         <DrugInfoItem $asNeeded={asNeeded}>
-          <span className="label">한 번에</span>
+          <span className="label">{t("drugOnceLabel")}</span>
           <span className="value">{amount}</span>
         </DrugInfoItem>
         <DrugInfoItem $asNeeded={asNeeded}>
-          <span className="label">하루</span>
+          <span className="label">{t("drugDailyLabel")}</span>
           <span className="value">{frequency}</span>
         </DrugInfoItem>
         <DrugInfoItem $asNeeded={asNeeded}>
-          <span className="label">기간</span>
+          <span className="label">{t("drugPeriodLabel")}</span>
           <span className="value">{duration}</span>
         </DrugInfoItem>
       </DrugInfoRow>
