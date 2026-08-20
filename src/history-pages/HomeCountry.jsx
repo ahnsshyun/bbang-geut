@@ -35,7 +35,7 @@ const HomeCountry = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const lang = getCurrentLang();
+        const lang = "ja"; 
 
         const [reportRes, homeRes] = await Promise.all([
           apiClient.post("/api/v1/reports", { kind: "repatriation", lang }),
