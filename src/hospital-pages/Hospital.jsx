@@ -6,9 +6,7 @@ import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import { Spacer } from "../components/Layout";
 import { AppointmentList, ChatConsultation } from "../components/Box/HospitalBox";
-import { useLang } from "../hooks/useLang";
-import { getStoredPatient } from "../api/auth";
-
+import { useLang, getCurrentLang } from "../hooks/useLang";
 import { useMe } from "../hooks/useMe";
 import { getClinic, getAppointments } from "../api/clinic";
 import { getConsultMessages, postConsultMessage, markConsultRead } from "../api/consult";
@@ -47,8 +45,7 @@ const Hospital = () => {
   useEffect(() => {
     let cancelled = false;
 
-    const patient = getStoredPatient();
-    const lang = patient?.lang || "ko";
+    const lang = getCurrentLang();
 
     Promise.all([getClinic({ lang }), getAppointments({ lang }), getConsultMessages({ lang })])
       .then(([clinicRes, appointmentsRes, messagesRes]) => {
@@ -73,8 +70,8 @@ const Hospital = () => {
   }, []);
 
   const refetchMessages = () => {
-    const patient = getStoredPatient();
-    const lang = patient?.lang || "ko";
+    const lang = getCurrentLang();
+
     getConsultMessages({ lang })
       .then((data) => setMessages(data.messages))
       .catch(() => {});

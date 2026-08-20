@@ -64,6 +64,8 @@ export const history = {
     statKeyCheckin: "체크인 기록",
     statKeyPhoto: "사진",
     statKeyRoutine: "루틴 이행률",
+    returnPast: "귀국을 완료했어요",
+    patientInfo: "환자정보",
   },
 
   ja: {
@@ -131,5 +133,7 @@ export const history = {
     statKeyCheckin: "チェックイン記録",
     statKeyPhoto: "写真",
     statKeyRoutine: "ルーティン実行率",
+    returnPast: "帰国が完了しました",
+    patientInfo: "患者情報",
   },
 };

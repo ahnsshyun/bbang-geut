@@ -8,7 +8,7 @@ import Layout, { Content, Spacer } from "../components/Layout";
 import LoginTheme from "../components/Theme/LoginTheme";
 import { NoticeBox, InfoBox, InfoRow } from "../components/Box/Box";
 import Button from "../components/Button";
-import { useLang } from "../hooks/useLang";
+import { useLang, getCurrentLang } from "../hooks/useLang";
 
 import { getSurgeryInfo } from "../api/onboarding";
 import { getStoredPatient } from "../api/auth";
@@ -34,8 +34,7 @@ const OnboardingCheck = () => {
   useEffect(() => {
     let cancelled = false;
 
-    const patient = getStoredPatient();
-    const lang = patient?.lang || "ko";
+    const lang = getCurrentLang();
 
     getSurgeryInfo({ lang })
       .then((data) => {

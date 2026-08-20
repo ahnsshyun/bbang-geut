@@ -7,7 +7,7 @@ import Layout, { Content, Spacer } from "../components/Layout";
 import LoginTheme from "../components/Theme/LoginTheme";
 import { PromptBox, NoticeBox } from "../components/Box/Box";
 import Button from "../components/Button";
-import { useLang } from "../hooks/useLang";
+import { useLang, getCurrentLang } from "../hooks/useLang";
 
 import { getSurgeryInfo } from "../api/onboarding";
 import { getStoredPatient } from "../api/auth";
@@ -45,8 +45,7 @@ const OnboardingComplete = () => {
 
     // TODO: 라벨 텍스트("시술")로 찾는 임시 방식. /onboarding/complete 응답에
     // procedure 같은 필드가 직접 오면 이 호출은 제거 가능.
-    const patient = getStoredPatient();
-    const lang = patient?.lang || "ko";
+    const lang = getCurrentLang();
 
     getSurgeryInfo({ lang })
       .then((data) => {

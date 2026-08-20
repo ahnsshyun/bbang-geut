@@ -23,7 +23,12 @@ const HistoryTheme = ({ returnDDay, dateLabel, children }) => {
   ];
 
   const isToday = returnDDay <= 0;
-  const bannerTitle = isToday ? t("returnToday") : `${t("returnDday")}${returnDDay}`;
+  const isPast = returnDDay < 0;
+  const bannerTitle = isPast
+    ? t("returnPast")
+    : isToday
+    ? t("returnToday")
+    : `${t("returnDday")}${returnDDay}`;
 
   return (
     <Wrapper>

@@ -22,8 +22,7 @@ export const home = {
     surgery: "수술",
     
     drugPending: "처방약 정보 연동은 준비 중이에요. 자세한 문의는 병원으로 연락 주세요.",
-    postSurgeryDay: "수술 후",
-    postSurgeryDayUnit: "일차",
+    surgeryDay: "수술일",
     fullRecovery: "완전 회복",
     viewSchedule: "전체 일정 보기",
     checkinDoneTitle: "체크인 완료!",
@@ -70,8 +69,7 @@ export const home = {
     drugPending: "処方薬情報の連携は準備中です。詳しいお問い合わせは病院までご連絡ください。",
     surgery: "手術",
 
-   postSurgeryDay: "手術後",
-   postSurgeryDayUnit: "日目",
+   surgeryDay: "手術日",
    fullRecovery: "完全回復",
    viewSchedule: "全体スケジュールを見る",
    checkinDoneTitle: "チェックイン完了！",

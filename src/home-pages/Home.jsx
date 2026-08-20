@@ -6,7 +6,7 @@ import { RoutineDetailModal, DrugDetailModal } from "../components/Modal/Modal";
 
 import { useHome } from "../hooks/useHome";
 import { putTaskLog, getCareItem } from "../api/home";
-import { useLang } from "../hooks/useLang";
+import { useLang, getCurrentLang } from "../hooks/useLang";
 import { getStoredPatient } from "../api/auth";
 
 const TASK_ICON_FALLBACK = {
@@ -106,8 +106,7 @@ const Home = () => {
     setCareItem(null);
     setCareItemError(null);
 
-   const patient = getStoredPatient();
-   const lang = patient?.lang || "ko";
+   const lang = getCurrentLang();
 
     getCareItem({ kind, key: activeKey, day: home?.day, lang })
       .then((data) => {

@@ -24,6 +24,7 @@ const Calendar = ({
   returnDate,
   completeDate,
   checkinDates = [],
+  remoteDates = [],
   
 }) => {
   const [viewDate, setViewDate] = useState(selectedDate || markedDate || new Date());
@@ -64,6 +65,7 @@ const Calendar = ({
             const marked = isSameDay(date, markedDate);
             const isToday = isSameDay(date, new Date());
             const isHospitalVisit = hospitalVisitDates.some((d) => isSameDay(d, date));
+            const isRemote = remoteDates.some((d) => isSameDay(d, date));
             const isReturnDay = isSameDay(date, returnDate);
             const isCompleteDay = isSameDay(date, completeDate);
             const hasCheckin = checkinDates.some((d) => isSameDay(d, date));
@@ -73,11 +75,12 @@ const Calendar = ({
                 key={j}
                 $selected={selected}
                 $disabled={disabled}
-                $hospitalVisit={isHospitalVisit}
                 onClick={() => !disabled && onSelect && onSelect(date)}
               >
                 {date.getDate()}
                 {marked && <SurgeryDot />}
+                {isHospitalVisit && <VisitDot />}
+                {isRemote && <RemoteDot />}
                 {isReturnDay && <PlaneMark>✈️</PlaneMark>}
                 {isCompleteDay && <CompleteMark>🏆</CompleteMark>}
                 {hasCheckin && <CheckinDot />}
@@ -152,8 +155,7 @@ const DayCell = styled.div`
   cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
   color: ${({ $disabled, $selected }) =>
     $disabled ? COLORS.greey : $selected ? "#ffffff" : COLORS.text_gray};
-  background: ${({ $selected, $hospitalVisit }) =>
-    $selected ? COLORS.main : $hospitalVisit ? COLORS.background_lightpurple : "transparent"};
+  background: ${({ $selected }) => ($selected ? COLORS.main : "transparent")};
   font-weight: ${({ $selected }) => ($selected ? 700 : 400)};
   visibility: ${({ $empty }) => ($empty ? "hidden" : "visible")};
 
@@ -203,4 +205,28 @@ const CheckinDot = styled.span`
   border-radius: 50%;
   background: ${COLORS.text_green};
   border: 2px solid ${COLORS.info};
+`;
+
+const VisitDot = styled.span`
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #FFB800;
+  border: 2px solid #FFE9AD;
+`;
+
+const RemoteDot = styled.span`
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff6ae6;
+  border: 2px solid #fcb2ff;
 `;

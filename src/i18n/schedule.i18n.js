@@ -19,6 +19,8 @@ export const schedule = {
     badgeReturn: "귀국",
     badgeRemote: "원격",
     badgeUnlock: "해금",
+    legendVisit: "내원일",
+    legendRemote: "원격 진찰",
   },
 
   ja: {
@@ -41,6 +43,7 @@ export const schedule = {
     badgeReturn: "帰国",
     badgeRemote: "遠隔",
     badgeUnlock: "解禁",
-
+    legendVisit: "来院日",
+    legendRemote: "遠隔診察",
   },
 };

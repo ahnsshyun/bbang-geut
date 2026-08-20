@@ -13,7 +13,7 @@ import { ScheduleDayModal } from "../components/Modal/ScheduleModal";
 import { getSchedule, getScheduleDay } from "../api/schedule";
 import { getHome } from "../api/home";
 import { getStoredPatient } from "../api/auth";
-import { useLang } from "../hooks/useLang";
+import { useLang, getCurrentLang } from "../hooks/useLang";
 
 function parseISODate(str) {
   // "2026-08-08" → Date (로컬 타임존 자정)
@@ -31,18 +31,17 @@ function formatISODate(date) {
 // API의 marker type("visit"/"return"/"remote"/"complete") → Calendar가 요구하는 개별 날짜 배열로 변환
 function splitMarkersByType(markers) {
   const hospitalVisitDates = [];
+  const remoteDates = [];
   let returnDate = null;
   let completeDate = null;
-  // TODO: "remote"(원격 진찰)를 Calendar가 별도로 표시할 방법이 아직 없어서
-  // 우선 hospitalVisitDates(내원과 동일한 보라 점)에 합쳐 넣었습니다.
-  // 디자인상 구분이 필요하면 Calendar 컴포넌트에 remoteDates prop을 추가해야 해요.
   markers.forEach((m) => {
     const date = parseISODate(m.date);
-    if (m.type === "visit" || m.type === "remote") hospitalVisitDates.push(date);
+      if (m.type === "visit") hospitalVisitDates.push(date);
+      else if (m.type === "remote") remoteDates.push(date);
     else if (m.type === "return") returnDate = date;
     else if (m.type === "complete") completeDate = date;
   });
-  return { hospitalVisitDates, returnDate, completeDate };
+  return { hospitalVisitDates, remoteDates, returnDate, completeDate };
 }
 
 const Schedule = () => {
@@ -58,33 +57,30 @@ const Schedule = () => {
   const [dayDetail, setDayDetail] = useState(null);
   const [dayDetailLoading, setDayDetailLoading] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+useEffect(() => {
+  let cancelled = false;
 
-  const patient = getStoredPatient();
-  const lang = patient?.lang || "ko";
+  const lang = getCurrentLang();
 
-    Promise.all([getSchedule({ lang }), getHome()])
-      .then(([scheduleRes, homeRes]) => {
-        if (cancelled) return;
-        setSchedule(scheduleRes);
-        // TODO: /schedule 응답엔 수술일이 직접 없어서 /home의 date - day로 역산.
-        // 백엔드가 /schedule에 surgery_date를 직접 내려주면 이 호출(getHome)은 제거 가능.
-        const d = new Date(homeRes.date);
-        d.setDate(d.getDate() - homeRes.day);
-        setSurgeryDate(d);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+  Promise.all([getSchedule({ lang }), getHome()])
+    .then(([scheduleRes, homeRes]) => {
+      if (cancelled) return;
+      setSchedule(scheduleRes);
+      const d = new Date(homeRes.date);
+      d.setDate(d.getDate() - homeRes.day);
+      setSurgeryDate(d);
+    })
+    .catch((err) => {
+      if (!cancelled) setError(err);
+    })
+    .finally(() => {
+      if (!cancelled) setLoading(false);
+    });
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  return () => {
+    cancelled = true;
+  };
+}, []);
 
   const handleSelectDate = (date) => {
     setSelectedDate(date);
@@ -114,7 +110,14 @@ const Schedule = () => {
     );
   }
 
-  const { hospitalVisitDates, returnDate, completeDate } = splitMarkersByType(schedule.markers);
+  const { hospitalVisitDates, remoteDates, returnDate, completeDate } = splitMarkersByType(schedule.markers);
+
+// 서버 markers에 complete 마커가 안 오는 경우가 있어 수술일 기준 D+120으로 직접 계산
+const calculatedCompleteDate = completeDate ?? (() => {
+  const d = new Date(surgeryDate);
+  d.setDate(d.getDate() + 120);
+  return d;
+})();
 
   const timelineItems = schedule.upcoming.map((item, index) => ({
     key: `${item.type}-${item.day}-${index}`,
@@ -143,7 +146,8 @@ const Schedule = () => {
         markedDate={surgeryDate}
         hospitalVisitDates={hospitalVisitDates}
         returnDate={returnDate}
-        completeDate={completeDate}
+        completeDate={calculatedCompleteDate}
+        remoteDates={remoteDates}
         selectedDate={selectedDate}
         onSelect={handleSelectDate}
       />
@@ -153,14 +157,27 @@ const Schedule = () => {
           <LegendDot />
           <span>{t("legendSurgery")}</span>
         </LegendItem>
+
         <LegendItem>
           <span>✈️</span>
           <span>{t("legendReturn")}</span>
         </LegendItem>
+
         <LegendItem>
           <span>🏆</span>
           <span>{t("legendComplete")}</span>
         </LegendItem>
+
+        <LegendItem>
+          <VisitDot />
+          <span>{t("legendVisit")}</span>
+        </LegendItem>
+
+        <LegendItem>
+          <RemoteDot />
+          <span>{t("legendRemote")}</span>
+        </LegendItem>
+
       </LegendRow>
 
       {selectedDate && !dayDetailLoading && dayDetail && (
@@ -219,6 +236,8 @@ const LegendRow = styled.div`
   align-items: center;
   gap: 20px;
   margin-top: 16px;
+  flex-wrap: wrap;
+  row-gap: 10px;
 `;
 
 const LegendItem = styled.div`
@@ -235,4 +254,20 @@ const LegendDot = styled.span`
   border-radius: 50%;
   background: ${COLORS.main};
   border: 2px solid ${COLORS.sub};
+`;
+
+const VisitDot = styled.span`
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #FFB800;
+  border: 2px solid #FFE9AD;
+`;
+
+const RemoteDot = styled.span`
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff6ae6;
+  border: 2px solid #fcb2ff;
 `;

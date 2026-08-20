@@ -119,7 +119,7 @@ export function ProgressCard({ dDay, surgeryDateLabel, stageLabel, stats = [], o
         <StageBadge>{stageLabel}</StageBadge>
       </CardTop>
       
-      <SubText>{t("postSurgeryDay")} {dDay}{t("postSurgeryDayUnit")} · {surgeryDateLabel}</SubText>
+      <SubText>{t("surgeryDay")}: {surgeryDateLabel}</SubText>
 
       <ProgressBarTrack>
         <ProgressBarFill style={{ width: `${progressPercent}%` }} />

@@ -7,6 +7,7 @@ import { HomeIcon, CameraIcon, RecordIcon, HospitalIcon } from "../Icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useLang } from "../../hooks/useLang";
 import { getNotifications } from "../../api/notifications";
+import { useMe } from "../../hooks/useMe";
 
 const Wrapper = styled.div`
   min-height: 100vh;
@@ -47,6 +48,12 @@ const BannerTitle = styled.p`
   font-size: 22px;
   color: ${COLORS.main};
   margin: 0;
+`;
+
+const BannerSubInfo = styled.p`
+  ${font("regbody")}
+  color: ${COLORS.text_gray};
+  margin: 4px 0 0;
 `;
 
 const BannerText = styled.p`
@@ -180,6 +187,7 @@ const HomeTheme = ({ bannerTitle = "나란히", onBellClick, children }) => {
   const location = useLocation();
   const { t, lang } = useLang();
   const [hasUnread, setHasUnread] = useState(false);
+  const { me } = useMe();
 
   useEffect(() => {
     let cancelled = false;
@@ -221,6 +229,11 @@ const HomeTheme = ({ bannerTitle = "나란히", onBellClick, children }) => {
         <BannerTitleGroup>
           <BannerTitle>{bannerTitle}</BannerTitle>
           <BannerText>{t("bannerSubtitle")}</BannerText>
+            {me && (
+              <BannerSubInfo>
+                {me.surgery?.procedure} · {me.clinic?.name} · {me.patient?.name}
+              </BannerSubInfo>
+            )}
         </BannerTitleGroup>
         <AlertButtonWrap>
           <AlertButton onClick={() => navigate("/notification")} aria-label={t("notificationTitle")}>

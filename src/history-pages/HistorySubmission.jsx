@@ -22,12 +22,21 @@ function formatDot(dateStr) {
   return `${y}.${m}.${d}`;
 }
 
+// 수술일(ISO date string) 기준으로 dayOffset(D+N)만큼 더한 날짜를 "YYYY.MM.DD"로 반환
+function formatDateFromSurgery(surgeryDateStr, dayOffset) {
+  if (!surgeryDateStr) return "";
+  const date = new Date(surgeryDateStr);
+  date.setDate(date.getDate() + dayOffset);
+  return formatDot(date);
+}
+
 const HistorySubmission = () => {
   const navigate = useNavigate();
   const { reportId } = useParams();
   const { t } = useLang();
   const [report, setReport] = useState(null);
   const [returnInfo, setReturnInfo] = useState(null); // { dDay, dateLabel }
+  const [surgeryDate, setSurgeryDate] = useState(null); // ISO date string, D+0의 실제 날짜
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showToast, setShowToast] = useState(false);
@@ -54,6 +63,12 @@ const HistorySubmission = () => {
           dDay: homeRes.summary?.return_dn ?? 0,
           dateLabel: homeRes.summary?.return_date ? formatDot(homeRes.summary.return_date) : "",
         });
+
+        // TODO: /home 응답엔 수술일이 직접 없어서 date - day로 역산.
+        // 백엔드가 surgery_date를 직접 내려주면 이 계산은 제거 가능.
+        const surgeryDateObj = new Date(homeRes.date);
+        surgeryDateObj.setDate(surgeryDateObj.getDate() - homeRes.day);
+        setSurgeryDate(surgeryDateObj.toISOString().slice(0, 10));
       } catch (err) {
         if (!cancelled) {
           const code = err.response?.data?.error?.code;
@@ -104,6 +119,13 @@ const HistorySubmission = () => {
   }
 
   const { meta, body } = report;
+  const patient = getStoredPatient();
+
+  // 기록 기간을 D+N 대신 실제 날짜로 표기
+  const periodFromLabel = formatDateFromSurgery(surgeryDate, report.day_from);
+  const periodToLabel = formatDateFromSurgery(surgeryDate, report.day_to);
+  const periodRangeLabel =
+    periodFromLabel && periodToLabel ? `${periodFromLabel} ~ ${periodToLabel}` : "";
 
   const stats = [
     { key: "checkin", icon: "🤚", label: t("statKeyCheckin"), value: `${meta.checkin_count}${t("checkinUnit")}`, tone: "green" },
@@ -124,10 +146,13 @@ const HistorySubmission = () => {
     desc: s.text,
   }));
 
+  // TODO: body.routines가 "이번 주" 단위가 아니라 루틴별 전체 기간(day_from~day_to) 완주율이라
+  // 정확한 "이번 주" 날짜 범위를 표시할 방법이 없어서 dateLabel은 일단 비워둡니다.
+  // 백엔드에서 "이번 주" 범위 데이터를 별도로 내려주면 그 값으로 채우면 됩니다.
   const routineDays = (body.routines || []).map((r) => ({
     key: r.key,
     dLabel: r.name,
-    dateLabel: `D+${r.day_from} ~ D+${r.day_to}`,
+    dateLabel: "",
     percent: Math.round(r.rate * 100),
   }));
 
@@ -149,7 +174,10 @@ const HistorySubmission = () => {
                 <b>{t("surgeryClinic")}</b> : {meta.clinic}
               </SummaryItem>
               <SummaryItem>
-                <b>{t("recordPeriod")}</b> : D+{report.day_from} ~ D+{report.day_to}
+                <b>{t("patientInfo")}</b> : {patient?.name ?? ""} {patient?.name_romaji ? `(${patient.name_romaji})` : ""}
+              </SummaryItem>
+              <SummaryItem>
+                <b>{t("recordPeriod")}</b> : {periodRangeLabel}
               </SummaryItem>
               <SummaryItem>
                 <b>{t("recordContent")}</b> : {t("statKeyCheckin")} {meta.checkin_count}/{meta.checkin_total}{t("checkinUnit")} · {t("statKeyPhoto")}{" "}
@@ -161,9 +189,7 @@ const HistorySubmission = () => {
           <Section>
             <RecentHeaderRow>
               <RecentTitle>{t("weeklyReport")}</RecentTitle>
-              <RecentDateRange>
-                D+{report.day_from} ~ D+{report.day_to}
-              </RecentDateRange>
+              <RecentDateRange>{periodRangeLabel}</RecentDateRange>
               <AiBadge>{t("aiAutoSummary")}</AiBadge>
             </RecentHeaderRow>
 

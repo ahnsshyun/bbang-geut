@@ -8,7 +8,7 @@ import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import { ShadowBox } from "../components/Box/Box";
 import { HistoryDayModal } from "../components/Modal/HistoryModal";
-import { useLang } from "../hooks/useLang";
+import { useLang, getCurrentLang } from "../hooks/useLang";
 import { getStoredPatient } from "../api/auth";
 
 import { getCalendar, getPhotoTimeline, getSymptomFlow, getDayDetail } from "../api/records";
@@ -55,8 +55,7 @@ const History = () => {
   useEffect(() => {
     let cancelled = false;
 
-    const patient = getStoredPatient();
-    const lang = patient?.lang || "ko";
+    const lang = getCurrentLang();
 
     Promise.all([
       getCalendar({ lang }),
@@ -92,8 +91,7 @@ const History = () => {
     setModalDetail(null);
     setModalLoading(true);
 
-    const patient = getStoredPatient();
-    const lang = patient?.lang || "ko";
+    const lang = getCurrentLang();
 
     getDayDetail({ date: formatKey(date), lang })
       .then((data) => setModalDetail(data))
