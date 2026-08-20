@@ -129,7 +129,7 @@ const Hospital = () => {
     return {
       key: msg.id,
       from: isDoctor ? "doctor" : "me",
-      authorLabel: isDoctor ? clinic.surgeon : me.patient.name,
+      authorLabel: isDoctor ? clinic.surgeon : (me.patient.name_romaji ?? me.patient.name),
       dateLabel: `${formatDotDate(msg.created_at)} · D+${msg.day}`,
       text: showTranslated ? msg.body_translated : msg.body_original,
     

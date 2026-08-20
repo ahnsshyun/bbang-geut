@@ -232,7 +232,7 @@ const HomeTheme = ({ bannerTitle = "나란히", onBellClick, children }) => {
           <BannerText>{t("bannerSubtitle")}</BannerText>
             {me && (
               <BannerSubInfo>
-                {me.surgery?.procedure} · {me.clinic?.name} · {me.patient?.name}
+                {me.surgery?.procedure} · {me.clinic?.name} · {me.patient.name_romaji}
               </BannerSubInfo>
             )}
         </BannerTitleGroup>
