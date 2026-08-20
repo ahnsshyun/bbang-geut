@@ -5,7 +5,7 @@ import COLORS from "../styles/colors";
 import FONTS, { font } from "../styles/fonts";
 import Layout, { Content, Spacer } from "../components/Layout";
 import LoginTheme from "../components/Theme/LoginTheme";
-import { ToastOverlay } from "../components/Box/Box";
+import { ToastOverlay, NoticeBox } from "../components/Box/Box";
 import { SubButton, ShutterButton, MockButton } from "../components/Button";
 import { useLang } from "../hooks/useLang";
 import { postPrescriptionOcr } from "../api/prescription";
@@ -122,11 +122,15 @@ const handleUseMockPrescription = async () => {
 
         {error && <ErrorText>{error}</ErrorText>}
 
+        <NoticeBox>
+          최초 1회만 실제 AI OCR이 동작합니다. 
+          기존에는 처방전이 한 번 등록되면 촬영 단계가 자동으로 생략되지만, 기능 시연을 위해 촬영 단계를 다시 보여드립니다.
+        </NoticeBox>
         <Spacer />
-
         <SubButton onClick={() => navigate("/onboarding/intake")}>
           {t("back")}
         </SubButton>
+
       </Content>
 
       {isScanning && (
