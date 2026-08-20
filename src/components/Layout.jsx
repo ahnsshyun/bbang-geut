@@ -7,13 +7,14 @@ const Layout = ({ children }) => {
 export default Layout;
 
 const Wrapper = styled.div`
-  width: 346px;
-  min-height: 640px;
+  max-width: 480px;
+  width: 100%;  
+  margin: 0 auto;
+
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 64px 14px 63px 14px;  /* 상 64, 우 28, 하 63, 좌 28 */
-  margin: 0 auto;
+  padding: 64px 20px 63px 20px;  
   box-sizing: border-box;         /* padding 포함해서 width 346px 고정 */
 `;
 

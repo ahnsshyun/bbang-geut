@@ -10,6 +10,10 @@ import { getNotifications } from "../../api/notifications";
 
 const Wrapper = styled.div`
   min-height: 100vh;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
   display: flex;
   flex-direction: column;
   background: ${COLORS.background};
@@ -95,8 +99,10 @@ const Body = styled.main`
 const BarWrapper = styled.nav`
   position: fixed;
   bottom: 16px;
-  left: 16px;
-  right: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 448px; /* 480px - 좌우 16px씩 */
   z-index: 10;
   height: 64px;
   box-sizing: border-box;

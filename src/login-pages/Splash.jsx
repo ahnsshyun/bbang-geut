@@ -37,6 +37,7 @@ const Splash = () => {
   };
 
   return (
+    <PageBackground>
     <Wrapper>
       <TopSection>
         <Label>{t("splashLabel")}</Label>
@@ -82,13 +83,28 @@ const Splash = () => {
         </StartButton>
       </BottomSection>
     </Wrapper>
+    </PageBackground>
   );
 };
 
 export default Splash;
 
+const PageBackground = styled.div`
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    160deg,
+    ${COLORS.main} 0%,
+    #935fe8 69%,
+    #B262E1 100%
+  );
+`;
+
 const Wrapper = styled.div`
-  width: 360px;
+  max-width: 360px;
+  width: 100%;
   min-height: 640px;
   display: flex;
   flex-direction: column;
