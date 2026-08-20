@@ -8,8 +8,23 @@ import LoginTheme from "../components/Theme/LoginTheme";
 import { ToastOverlay } from "../components/Box/Box";
 import { SubButton, ShutterButton, MockButton } from "../components/Button";
 import { useLang } from "../hooks/useLang";
-import { getPrescriptionOcr } from "../api/prescription";
+import { postPrescriptionOcr } from "../api/prescription";
 import mockPrescriptionImg from "../assets/mockPrescription.png";
+
+function ocrErrorMessage(err, t) {
+  const code = err?.response?.data?.error?.code;
+  const message = err?.response?.data?.error?.message;
+  if (code === "VALIDATION_ERROR") return message || t("useMockPrescriptionPrompt");
+  if (code === "ONBOARDING_REQUIRED") return t("onboardingRequired");
+  if (code === "OCR_FAILED") return message || t("ocrError");
+  return message || t("ocrError");
+}
+
+async function mockImageToFile() {
+  const res = await fetch(mockPrescriptionImg);
+  const blob = await res.blob();
+  return new File([blob], "mock-prescription.png", { type: blob.type || "image/png" });
+}
 
 const PrescriptionCapture = () => {
   const navigate = useNavigate();
@@ -37,11 +52,14 @@ const handleFileChange = (e) => {
 
 const handleUseMockPrescription = async () => {
   setPreviewUrl(mockPrescriptionImg);
+  // 샘플처방전 사진도 로컬에 저장해서 결과 확인 화면에서 그대로 보여준다.
+  localStorage.setItem("naranhi_prescription_photo", mockPrescriptionImg);
   setIsScanning(true);
   setError(null);
 
   try {
-    const result = await getPrescriptionOcr();
+    const mockFile = await mockImageToFile();
+    const result = await postPrescriptionOcr(mockFile);
     localStorage.setItem("naranhi_prescription_ocr", JSON.stringify(result));
     navigate("/onboarding/prescription/result");
   } catch (err) {
@@ -50,7 +68,7 @@ const handleUseMockPrescription = async () => {
       navigate("/onboarding/prescription/result");
       return;
     }
-    setError(err.response?.data?.error?.message || t("ocrError"));
+    setError(ocrErrorMessage(err, t));
     setIsScanning(false);
   }
 };
@@ -59,7 +77,7 @@ const handleUseMockPrescription = async () => {
     setIsScanning(true);
     setError(null);
     try {
-      const result = await getPrescriptionOcr(file);
+      const result = await postPrescriptionOcr(file);
       localStorage.setItem("naranhi_prescription_ocr", JSON.stringify(result));
       navigate("/onboarding/prescription/result");
     } catch (err) {
@@ -67,7 +85,7 @@ const handleUseMockPrescription = async () => {
         navigate("/onboarding/prescription/result");
         return;
       }
-      setError(t("useMockPrescriptionPrompt"));
+      setError(ocrErrorMessage(err, t));
       setIsScanning(false);
     }
   };
