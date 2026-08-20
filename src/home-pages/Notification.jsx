@@ -136,6 +136,9 @@ const Wrapper = styled.div`
   box-sizing: border-box;
   padding: 20px 28px 40px;
   background: #ffffff;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
 `;
 
 const Header = styled.div`
