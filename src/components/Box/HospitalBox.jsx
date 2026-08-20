@@ -124,7 +124,7 @@ const ChatWrapper = styled.div`
   background: #ffffff;
   padding: 10px;
   border-radius: 11px;
-  height: 800px; /* 채팅창 전체 고정 높이 - 필요에 맞게 조정 */
+  height: 1000px; /* 채팅창 전체 고정 높이 - 필요에 맞게 조정 */
   overflow: hidden;
 `;
 
@@ -134,7 +134,8 @@ const MessageScrollArea = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
-  min-height: 0; /* flex 자식이 overflow 되려면 필요 */
+  min-height: 0; 
+  padding-right: 8px;
 `;
 
 const ChatDoctorName = styled.p`
@@ -456,6 +457,7 @@ export function ChatConsultation({
           </React.Fragment>
         );
       })}
+      </MessageScrollArea>
 
       {attachments.length > 0 && (
         <InfoBox style={{ padding: "12px", background: `${COLORS.info}4D` }}>
@@ -467,7 +469,6 @@ export function ChatConsultation({
           ))}
         </InfoBox>
       )}
-      </MessageScrollArea>
 
       <ChatInputWrap>
         <ChatTextarea
