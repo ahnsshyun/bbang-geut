@@ -31,35 +31,33 @@ const PrescriptionCapture = () => {
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
 
-  // Result 화면에서도 보여주기 위해 Base64로 변환해 저장
-  const reader = new FileReader();
-  reader.onloadend = () => {
-    localStorage.setItem("naranhi_prescription_photo", reader.result);
-  };
-  reader.readAsDataURL(file);
-
-    handleCapture(file);
+    setError(t("useMockPrescriptionPrompt"));
   };
 
-  const handleUseMockPrescription = async () => {
-    setPreviewUrl(mockPrescriptionImg);
-    try {
-      const res = await fetch(mockPrescriptionImg);
-      const blob = await res.blob();
-      const file = new File([blob], "mock-prescription.jpg", { type: blob.type });
+const handleUseMockPrescription = async () => {
+  setPreviewUrl(mockPrescriptionImg);
+  setIsScanning(true);
+  setError(null);
 
-    // 목업 이미지도 동일하게 저장
+  try {
+    const res = await fetch(mockPrescriptionImg);
+    const blob = await res.blob();
+    const file = new File([blob], "mock-prescription.jpg", { type: blob.type });
+
     const reader = new FileReader();
     reader.onloadend = () => {
       localStorage.setItem("naranhi_prescription_photo", reader.result);
     };
     reader.readAsDataURL(blob);
 
-      await handleCapture(file, { silent: true });
-    } catch (err) {
-      setError(t("ocrError"));
-    }
-  };
+    const result = await getPrescriptionOcr(file);
+    localStorage.setItem("naranhi_prescription_ocr", JSON.stringify(result));
+    navigate("/onboarding/prescription/result");
+  } catch (err) {
+    setError(err.response?.data?.error?.message || t("ocrError"));
+    setIsScanning(false);
+  }
+};
 
   const handleCapture = async (file, { silent = false } = {}) => {
     setIsScanning(true);
